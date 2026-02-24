@@ -1,0 +1,12 @@
+[build]
+  command = "pnpm install && pnpm run build:netlify"
+  publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NETLIFY = "true"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
