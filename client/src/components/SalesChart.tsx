@@ -6,16 +6,9 @@
   - Previsão estatística original (linha pontilhada laranja)
   - Previsão ajustada após colaboração (linha sólida verde) — aparece após salvar ajustes
 */
-import { Suspense, lazy } from "react";
-// Lazy load recharts to avoid including it in the main bundle until needed.
-const RechartsLineChart = lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
-const RechartsLine = lazy(() => import('recharts').then(module => ({ default: module.Line })));
-const RechartsXAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
-const RechartsYAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
-const RechartsCartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
-const RechartsTooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
-const RechartsResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const RechartsReferenceLine = lazy(() => import('recharts').then(module => ({ default: module.ReferenceLine })));
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
+} from "recharts";
 import { TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useForecast } from "@/contexts/ForecastContext";
@@ -147,84 +140,82 @@ export default function SalesChart() {
 
       {/* Chart */}
       <div className="h-[320px]">
-        <Suspense fallback={<div className="h-full w-full flex items-center justify-center"><div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" /></div>}>
-          <RechartsResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart data={filteredMonthlyData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <RechartsCartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-              <RechartsXAxis
-                dataKey="month"
-                tick={{ fontSize: 10, fill: "#64748B" }}
-                tickLine={false}
-                axisLine={{ stroke: "#E2E8F0" }}
-                interval={2}
-              />
-              <RechartsYAxis
-                tick={{ fontSize: 10, fill: "#64748B" }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={formatNumber}
-                width={45}
-              />
-              <RechartsTooltip content={<CustomTooltip />} />
-              <RechartsReferenceLine
-                x={DATA_BOUNDARIES.firstForecastMonth}
-                stroke="#94A3B8"
-                strokeDasharray="4 4"
-                strokeWidth={1}
-                label={{
-                  value: "Início Previsão",
-                  position: "top",
-                  fill: "#94A3B8",
-                  fontSize: 10,
-                  fontWeight: 600,
-                }}
-              />
-              {/* Historical sales (Venda Regular) — solid dark blue */}
-              <RechartsLine
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={filteredMonthlyData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 10, fill: "#64748B" }}
+              tickLine={false}
+              axisLine={{ stroke: "#E2E8F0" }}
+              interval={2}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: "#64748B" }}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={formatNumber}
+              width={45}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <ReferenceLine
+              x={DATA_BOUNDARIES.firstForecastMonth}
+              stroke="#94A3B8"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              label={{
+                value: "Início Previsão",
+                position: "top",
+                fill: "#94A3B8",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            />
+            {/* Historical sales (Venda Regular) — solid dark blue */}
+            <Line
+              type="monotone"
+              dataKey="historico"
+              stroke="#0F4C75"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 4, fill: "#0F4C75", stroke: "#fff", strokeWidth: 2 }}
+              connectNulls={false}
+            />
+            {/* Historical Qtd Bruta — solid light blue */}
+            <Line
+              type="monotone"
+              dataKey="qtdBruta"
+              stroke="#60A5FA"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 4, fill: "#60A5FA", stroke: "#fff", strokeWidth: 2 }}
+              connectNulls={false}
+            />
+            {/* Original forecast — dashed orange */}
+            <Line
+              type="monotone"
+              dataKey="previsao"
+              stroke="#D97706"
+              strokeWidth={2}
+              strokeDasharray="8 4"
+              dot={false}
+              activeDot={{ r: 4, fill: "#D97706", stroke: "#fff", strokeWidth: 2 }}
+              connectNulls={false}
+            />
+            {/* Adjusted forecast — solid green (only when adjustments exist) */}
+            {showAdjustedLine && (
+              <Line
                 type="monotone"
-                dataKey="historico"
-                stroke="#0F4C75"
+                dataKey="previsaoAjustada"
+                stroke="#059669"
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, fill: "#0F4C75", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2 }}
                 connectNulls={false}
               />
-              {/* Historical Qtd Bruta — solid light blue */}
-              <RechartsLine
-                type="monotone"
-                dataKey="qtdBruta"
-                stroke="#60A5FA"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4, fill: "#60A5FA", stroke: "#fff", strokeWidth: 2 }}
-                connectNulls={false}
-              />
-              {/* Original forecast — dashed orange */}
-              <RechartsLine
-                type="monotone"
-                dataKey="previsao"
-                stroke="#D97706"
-                strokeWidth={2}
-                strokeDasharray="8 4"
-                dot={false}
-                activeDot={{ r: 4, fill: "#D97706", stroke: "#fff", strokeWidth: 2 }}
-                connectNulls={false}
-              />
-              {/* Adjusted forecast — solid green (only when adjustments exist) */}
-              {showAdjustedLine && (
-                <RechartsLine
-                  type="monotone"
-                  dataKey="previsaoAjustada"
-                  stroke="#059669"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2 }}
-                  connectNulls={false}
-                />
-              )}
-            </RechartsLineChart>
-          </RechartsResponsiveContainer>
-        </Suspense>
+            )}
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
