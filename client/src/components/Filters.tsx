@@ -10,11 +10,18 @@ import { useState } from "react";
 import { ChevronDown, Filter, RotateCcw, Search } from "lucide-react";
 import { categoriesNivel3, categoriesNivel4, centrosDistribuicao, compradores, fornecedores } from "@/lib/mockData";
 import { useFilters } from "@/contexts/FilterContext";
+import { useShallow } from "zustand/react/shallow";
 import MultiSelectCombobox from "./MultiSelectCombobox";
 
 export default function Filters() {
   const [expanded, setExpanded] = useState(true);
-  const { filters, setFilter, applyFilters, clearFilters, isFiltered } = useFilters();
+  const { filters, setFilter, applyFilters, clearFilters, isFiltered } = useFilters(useShallow(state => ({
+    filters: state.filters,
+    setFilter: state.setFilter,
+    applyFilters: state.applyFilters,
+    clearFilters: state.clearFilters,
+    isFiltered: state.isFiltered
+  })));
 
   // Count total active filter selections
   const activeCount = (

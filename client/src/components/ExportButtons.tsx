@@ -9,6 +9,7 @@ import { FileSpreadsheet, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFilters } from "@/contexts/FilterContext";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useShallow } from "zustand/react/shallow";
 import { exportToExcel } from "@/lib/exportExcel";
 import { exportToPdf } from "@/lib/exportPdf";
 import { DEFAULT_USER } from "@/lib/constants";
@@ -22,7 +23,13 @@ export default function ExportButtons() {
     filteredMonthlyData,
     appliedFilters,
     isFiltered,
-  } = useFilters();
+  } = useFilters(useShallow(state => ({
+    filteredProducts: state.filteredProducts,
+    filteredComparison: state.filteredComparison,
+    filteredMonthlyData: state.filteredMonthlyData,
+    appliedFilters: state.appliedFilters,
+    isFiltered: state.isFiltered
+  })));
   const { startMonth, endMonth } = usePeriod();
 
   const [exportingExcel, setExportingExcel] = useState(false);

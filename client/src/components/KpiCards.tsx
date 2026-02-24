@@ -6,6 +6,7 @@
 import { Package, TrendingUp, Edit3, BarChart3 } from "lucide-react";
 import { useForecast } from "@/contexts/ForecastContext";
 import { useFilters } from "@/contexts/FilterContext";
+import { useShallow } from "zustand/react/shallow";
 import { useKpiValues } from "@/hooks/useKpiValues";
 
 function fmt(val: number): string {
@@ -13,8 +14,16 @@ function fmt(val: number): string {
 }
 
 export default function KpiCards() {
-  const { categoriasEditadas, totalImpact, hasAdjustments } = useForecast();
-  const { filteredMonthlyData, isFiltered, filteredProducts } = useFilters();
+  const { categoriasEditadas, totalImpact, hasAdjustments } = useForecast(useShallow(state => ({
+    categoriasEditadas: state.categoriasEditadas,
+    totalImpact: state.totalImpact,
+    hasAdjustments: state.hasAdjustments
+  })));
+  const { filteredMonthlyData, isFiltered, filteredProducts } = useFilters(useShallow(state => ({
+    filteredMonthlyData: state.filteredMonthlyData,
+    isFiltered: state.isFiltered,
+    filteredProducts: state.filteredProducts
+  })));
 
   const kpiValues = useKpiValues(filteredMonthlyData, filteredProducts, isFiltered);
 
@@ -62,31 +71,27 @@ export default function KpiCards() {
       {kpis.map((kpi) => (
         <div
           key={kpi.label}
-          className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 ${
-            kpi.label === "Ajustes Realizados" && hasAdjustments
+          className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 ${kpi.label === "Ajustes Realizados" && hasAdjustments
               ? "border-emerald-200 bg-emerald-50/30"
               : "border-border"
-          }`}
+            }`}
         >
           <div className="flex items-start justify-between mb-3">
-            <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${
-              kpi.label === "Ajustes Realizados" && hasAdjustments
+            <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${kpi.label === "Ajustes Realizados" && hasAdjustments
                 ? "bg-emerald-100"
                 : "bg-[#0F4C75]/8"
-            }`}>
-              <kpi.icon className={`w-4.5 h-4.5 ${
-                kpi.label === "Ajustes Realizados" && hasAdjustments
+              }`}>
+              <kpi.icon className={`w-4.5 h-4.5 ${kpi.label === "Ajustes Realizados" && hasAdjustments
                   ? "text-emerald-700"
                   : "text-[#0F4C75]"
-              }`} />
+                }`} />
             </div>
             {kpi.variation && (
               <span
-                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  kpi.positive
+                className={`text-xs font-bold px-2 py-0.5 rounded-full ${kpi.positive
                     ? "bg-emerald-50 text-emerald-700"
                     : "bg-red-50 text-red-700"
-                }`}
+                  }`}
               >
                 {kpi.variation}
               </span>

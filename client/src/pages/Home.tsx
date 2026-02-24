@@ -29,8 +29,8 @@ import { FilterProvider } from "@/contexts/FilterContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import { Clock, Info } from "lucide-react";
 import { motion } from "framer-motion";
-import ExportButtons from "@/components/ExportButtons";
-
+import { Suspense, lazy } from "react";
+const ExportButtons = lazy(() => import("@/components/ExportButtons"));
 const fadeInUp = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
@@ -50,93 +50,94 @@ export default function Home() {
 }
 
 function HomeContent() {
-  const { adjustedProducts, getMonthlyAdjustmentRatio } = useForecast();
   return (
-    <FilterProvider products={adjustedProducts} getMonthlyAdjustmentRatio={getMonthlyAdjustmentRatio}>
-        <div className="min-h-screen bg-background">
-          <Header />
+    <FilterProvider>
+      <div className="min-h-screen bg-background">
+        <Header />
 
-          {/* Hero banner */}
-          <div className="relative h-32 overflow-hidden">
-            <img
-              src={HERO_IMAGE}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0F4C75]/80 via-[#0F4C75]/50 to-transparent" />
-            <div className="absolute inset-0 flex items-center px-6">
-              <div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight">
-                  Painel de Previsão Colaborativa
-                </h2>
-                <p className="text-sm text-white/80 mt-0.5 font-medium">
-                  Visualize, analise e ajuste as previsões de vendas em tempo real
-                </p>
-              </div>
+        {/* Hero banner */}
+        <div className="relative h-32 overflow-hidden">
+          <img
+            src={HERO_IMAGE}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F4C75]/80 via-[#0F4C75]/50 to-transparent" />
+          <div className="absolute inset-0 flex items-center px-6">
+            <div>
+              <h2 className="text-xl font-extrabold text-white tracking-tight">
+                Painel de Previsão Colaborativa
+              </h2>
+              <p className="text-sm text-white/80 mt-0.5 font-medium">
+                Visualize, analise e ajuste as previsões de vendas em tempo real
+              </p>
             </div>
           </div>
-
-          {/* Main content */}
-          <main className="px-6 py-5 space-y-5 max-w-[1440px] mx-auto">
-            {/* Info bar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Info className="w-3.5 h-3.5" />
-                <span>
-                  Dados carregados do Datalake · Última atualização:{" "}
-                  <span className="font-semibold text-foreground">08/02/2026 às 09:30</span>
-                </span>
-              </div>
-              <ExportButtons />
-            </div>
-
-            {/* KPI Cards */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.05 }}>
-              <KpiCards />
-            </motion.div>
-
-            {/* Filters */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.1 }}>
-              <Filters />
-            </motion.div>
-
-            {/* Sales Chart */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.15 }}>
-              <SalesChart />
-            </motion.div>
-
-            {/* Comparison Table (Cat N4) */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
-              <ComparisonTable />
-            </motion.div>
-
-            {/* Product Table (SKU level) */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.22 }}>
-              <ProductTable />
-            </motion.div>
-
-            {/* Adjustment Table */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.25 }}>
-              <AdjustmentTable />
-            </motion.div>
-
-            {/* Supplier Adjustment */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.27 }}>
-              <SupplierAdjustment />
-            </motion.div>
-
-            {/* Audit Log */}
-            <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.3 }}>
-              <AuditLog />
-            </motion.div>
-
-            {/* Footer */}
-            <footer className="flex items-center justify-between py-4 border-t border-border text-xs text-muted-foreground">
-              <span>Previsão de Vendas Colaborativa v1.0 · Plataforma Interna</span>
-              <span>Desenvolvido para a equipe comercial</span>
-            </footer>
-          </main>
         </div>
+
+        {/* Main content */}
+        <main className="px-6 py-5 space-y-5 max-w-[1440px] mx-auto">
+          {/* Info bar */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+              <Info className="w-3.5 h-3.5" />
+              <span>
+                Dados carregados do Datalake · Última atualização:{" "}
+                <span className="font-semibold text-foreground">08/02/2026 às 09:30</span>
+              </span>
+            </div>
+            <Suspense fallback={<div className="h-9 w-64 bg-muted animate-pulse rounded-md" />}>
+              <ExportButtons />
+            </Suspense>
+          </div>
+
+          {/* KPI Cards */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.05 }}>
+            <KpiCards />
+          </motion.div>
+
+          {/* Filters */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.1 }}>
+            <Filters />
+          </motion.div>
+
+          {/* Sales Chart */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.15 }}>
+            <SalesChart />
+          </motion.div>
+
+          {/* Comparison Table (Cat N4) */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.2 }}>
+            <ComparisonTable />
+          </motion.div>
+
+          {/* Product Table (SKU level) */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.22 }}>
+            <ProductTable />
+          </motion.div>
+
+          {/* Adjustment Table */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.25 }}>
+            <AdjustmentTable />
+          </motion.div>
+
+          {/* Supplier Adjustment */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.27 }}>
+            <SupplierAdjustment />
+          </motion.div>
+
+          {/* Audit Log */}
+          <motion.div {...fadeInUp} transition={{ ...fadeInUp.transition, delay: 0.3 }}>
+            <AuditLog />
+          </motion.div>
+
+          {/* Footer */}
+          <footer className="flex items-center justify-between py-4 border-t border-border text-xs text-muted-foreground">
+            <span>Previsão de Vendas Colaborativa v1.0 · Plataforma Interna</span>
+            <span>Desenvolvido para a equipe comercial</span>
+          </footer>
+        </main>
+      </div>
     </FilterProvider>
   );
 }

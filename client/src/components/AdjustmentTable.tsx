@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { categoriesNivel3, categoriesNivel4, sampleProducts } from "@/lib/mockData";
 import { useForecast, type AdjustmentLevel, type AdjustmentType, type SavedAdjustment } from "@/contexts/ForecastContext";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useShallow } from "zustand/react/shallow";
 import { DEFAULT_USER } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -62,7 +63,18 @@ export default function AdjustmentTable() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<SavedAdjustment[]>([]);
   const tableRef = useRef<HTMLDivElement>(null);
-  const { saveAdjustments, getMonthlyForecastForItem, getSkuCountForItem, savedAdjustments, catN3toN4, hasAdjustments, exportAdjustments, markAsExported, pendingExportCount, exportedCount } = useForecast();
+  const { saveAdjustments, getMonthlyForecastForItem, getSkuCountForItem, savedAdjustments, catN3toN4, hasAdjustments, exportAdjustments, markAsExported, pendingExportCount, exportedCount } = useForecast(useShallow(state => ({
+    saveAdjustments: state.saveAdjustments,
+    getMonthlyForecastForItem: state.getMonthlyForecastForItem,
+    getSkuCountForItem: state.getSkuCountForItem,
+    savedAdjustments: state.savedAdjustments,
+    catN3toN4: state.catN3toN4,
+    hasAdjustments: state.hasAdjustments,
+    exportAdjustments: state.exportAdjustments,
+    markAsExported: state.markAsExported,
+    pendingExportCount: state.pendingExportCount,
+    exportedCount: state.exportedCount
+  })));
   const { activeMonths } = usePeriod();
 
   const usedItems = useMemo(() => new Set(rows.map(r => r.item)), [rows]);
@@ -150,17 +162,17 @@ export default function AdjustmentTable() {
   // Calculate totals for a row
   function getRowTotals(row: AdjustmentRow) {
     if (!row.item) return { original: 0, adjusted: 0, diff: 0 };
-    
+
     let totalOriginal = 0;
     let totalAdjusted = 0;
 
     for (const month of activeMonths) {
       const monthForecast = getMonthlyForecastForItem(row.level, row.item, month);
       totalOriginal += monthForecast;
-      
+
       const rawVal = row.monthlyValues[month];
       const numVal = typeof rawVal === "string" ? parseFloat(rawVal) || 0 : rawVal;
-      
+
       if (numVal !== 0) {
         totalAdjusted += calculateMonthlyAdjusted(monthForecast, row.type, numVal);
       } else {
@@ -195,7 +207,7 @@ export default function AdjustmentTable() {
 
     const newAdjustments: SavedAdjustment[] = validRows.map(r => {
       const totals = getRowTotals(r);
-      
+
       // Convert monthlyValues to numbers
       const cleanMonthlyValues: Record<string, number> = {};
       for (const month of activeMonths) {
@@ -357,11 +369,10 @@ export default function AdjustmentTable() {
           {hasAdjustments && (
             <button
               onClick={handleExport}
-              className={`h-8 px-4 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
-                pendingExportCount > 0
+              className={`h-8 px-4 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${pendingExportCount > 0
                   ? "text-white bg-[#0F4C75] hover:bg-[#0F4C75]/90 shadow-sm"
                   : "text-muted-foreground bg-muted border border-border cursor-default"
-              }`}
+                }`}
             >
               <Download className="w-3.5 h-3.5" />
               {pendingExportCount > 0
@@ -454,9 +465,8 @@ export default function AdjustmentTable() {
                               <button
                                 key={level}
                                 onClick={() => { updateRow(row.id, "level", level); setOpenDropdown(null); }}
-                                className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 ${
-                                  row.level === level ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
-                                }`}
+                                className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 ${row.level === level ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                                  }`}
                               >
                                 {level === "PRODUTO" ? (
                                   <Package className="w-3 h-3 text-blue-600" />
@@ -543,9 +553,8 @@ export default function AdjustmentTable() {
                                           setOpenDropdown(null);
                                           setItemSearchTerms(prev => ({ ...prev, [row.id]: "" }));
                                         }}
-                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${
-                                          row.item === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
-                                        }`}
+                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${row.item === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                                          }`}
                                       >
                                         {searchTerm && idx >= 0 ? (
                                           <>{before}<mark className="bg-yellow-200 text-inherit rounded-sm px-0.5">{match}</mark>{after}</>
@@ -572,21 +581,19 @@ export default function AdjustmentTable() {
                       <div className="flex items-center justify-center gap-0.5 bg-muted rounded-lg p-0.5">
                         <button
                           onClick={() => updateRow(row.id, "type", "%")}
-                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            row.type === "%"
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "%"
                               ? "bg-white text-[#0F4C75] shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
-                          }`}
+                            }`}
                         >
                           %
                         </button>
                         <button
                           onClick={() => updateRow(row.id, "type", "QTD")}
-                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            row.type === "QTD"
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "QTD"
                               ? "bg-white text-[#0F4C75] shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
-                          }`}
+                            }`}
                         >
                           QTD
                         </button>
@@ -609,13 +616,12 @@ export default function AdjustmentTable() {
                               value={row.monthlyValues[month] ?? ""}
                               onChange={(e) => updateMonthlyValue(row.id, month, e.target.value)}
                               disabled={!row.item}
-                              className={`w-full h-7 px-1.5 text-[11px] text-center font-semibold tabular-nums border rounded-lg outline-none transition-all ${
-                                !row.item
+                              className={`w-full h-7 px-1.5 text-[11px] text-center font-semibold tabular-nums border rounded-lg outline-none transition-all ${!row.item
                                   ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
                                   : hasValue
                                     ? "border-[#0F4C75]/30 bg-[#0F4C75]/5 text-[#0F4C75] focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
                                     : "border-border hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
-                              }`}
+                                }`}
                             />
                             {row.item && (
                               <span className="text-[8px] text-muted-foreground tabular-nums">
@@ -638,9 +644,8 @@ export default function AdjustmentTable() {
                     </td>
 
                     {/* Diferença (total) */}
-                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${
-                      totals.diff > 0 ? "text-emerald-700" : totals.diff < 0 ? "text-red-600" : "text-muted-foreground"
-                    }`}>
+                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${totals.diff > 0 ? "text-emerald-700" : totals.diff < 0 ? "text-red-600" : "text-muted-foreground"
+                      }`}>
                       {totals.original > 0 && totals.diff !== 0
                         ? `${totals.diff > 0 ? "+" : ""}${totals.diff.toLocaleString("pt-BR")}`
                         : "—"
@@ -732,9 +737,8 @@ export default function AdjustmentTable() {
                 <div key={idx} className="p-3 bg-muted rounded-lg space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-foreground">{adj.item}</span>
-                    <span className={`text-xs font-bold ${
-                      diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"
-                    }`}>
+                    <span className={`text-xs font-bold ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"
+                      }`}>
                       {diff > 0 ? "+" : ""}{pct}%
                     </span>
                   </div>
@@ -751,11 +755,10 @@ export default function AdjustmentTable() {
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between text-sm font-bold">
                 <span>Impacto Total:</span>
-                <span className={`${
-                  pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0
+                <span className={`${pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0
                     ? "text-emerald-600"
                     : "text-red-600"
-                }`}>
+                  }`}>
                   {pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0 ? "+" : ""}
                   {pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0).toLocaleString("pt-BR")} un.
                 </span>

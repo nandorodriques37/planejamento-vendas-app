@@ -12,9 +12,11 @@
 */
 import { Table2, MessageSquare, Pencil, AlertTriangle, ArrowRight, Users, TrendingUp, TrendingDown, Package, ShieldCheck, ShieldAlert, ShieldQuestion, Info } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { createPortal } from "react-dom";
 import { useFilters } from "@/contexts/FilterContext";
 import { useForecast, type SavedAdjustment } from "@/contexts/ForecastContext";
+import { useShallow } from "zustand/react/shallow";
 import { catN4CdMonthlyHistorico } from "@/lib/mockData";
 import { comparisonData } from "@/lib/dataDerived";
 import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
@@ -502,9 +504,8 @@ function ConfirmationModal({
             </div>
             <div className="flex flex-col items-center gap-0.5">
               <ArrowRight className="w-5 h-5 text-muted-foreground" />
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                isIncrease ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-              }`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isIncrease ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                }`}>
                 {delta > 0 ? "+" : ""}{formatVal(delta)} un.
               </span>
             </div>
@@ -588,11 +589,10 @@ function ConfirmationModal({
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 text-xs font-bold text-white rounded-lg transition-colors flex items-center gap-1.5 ${
-                isIncrease
-                  ? "bg-emerald-600 hover:bg-emerald-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
+              className={`px-4 py-2 text-xs font-bold text-white rounded-lg transition-colors flex items-center gap-1.5 ${isIncrease
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-red-600 hover:bg-red-700"
+                }`}
             >
               Confirmar Ajuste
             </button>
@@ -684,9 +684,8 @@ const EditableQtdCell = memo(function EditableQtdCell({ value, originalValue, is
   return (
     <td
       onClick={handleStartEdit}
-      className={`px-2 py-2 text-right font-semibold tabular-nums border-l border-border/50 cursor-pointer group relative transition-colors hover:bg-[#0F4C75]/[0.04] ${className} ${
-        isEdited ? "bg-emerald-50/50" : ""
-      }`}
+      className={`px-2 py-2 text-right font-semibold tabular-nums border-l border-border/50 cursor-pointer group relative transition-colors hover:bg-[#0F4C75]/[0.04] ${className} ${isEdited ? "bg-emerald-50/50" : ""
+        }`}
       title={isEdited
         ? `Original: ${formatVal(originalValue)} · Ajustado: ${formatVal(value)} (${deltaPercent > 0 ? "+" : ""}${deltaPercent.toFixed(1)}%)\nClique para editar`
         : "Clique para editar"
@@ -708,14 +707,127 @@ const EditableQtdCell = memo(function EditableQtdCell({ value, originalValue, is
 });
 
 // ============================================================
+// ComparisonTableRow — Memoized row for ComparisonTable
+// ============================================================
+const ComparisonTableRow = memo(function ComparisonTableRow({
+  row,
+  idx,
+  isEdited,
+  comment,
+  onCommentChange,
+  onInlineEditRequest,
+  getOriginalValue
+}: {
+  row: any;
+  idx: number;
+  isEdited: boolean;
+  comment: string;
+  onCommentChange: (categoria: string, val: string) => void;
+  onInlineEditRequest: (categoria: string, monthKey: string, val: number) => void;
+  getOriginalValue: (categoria: string, monthIdx: number) => number | null;
+}) {
+  return (
+    <tr
+      className={`border-b border-border/50 transition-colors ${isEdited
+        ? "bg-emerald-50/30 hover:bg-emerald-50/50"
+        : idx % 2 === 0
+          ? "bg-white hover:bg-[#0F4C75]/[0.02]"
+          : "bg-[#F8FAFC]/50 hover:bg-[#0F4C75]/[0.02]"
+        }`}
+    >
+      <td className={`sticky left-0 z-10 px-3 py-2 font-semibold text-foreground whitespace-nowrap text-xs ${isEdited ? "bg-emerald-50/30" : idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]/50"
+        }`}>
+        <div className="flex items-center gap-1.5">
+          {isEdited && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
+          <ConfidenceBadge categoria={row.categoria} />
+          <span className="flex-shrink-0">{row.categoria}</span>
+          <Sparkline categoria={row.categoria} />
+        </div>
+      </td>
+      {/* Mês 0 — Editable */}
+      <EditableQtdCell
+        value={row.mes0}
+        originalValue={getOriginalValue(row.categoria, 0)}
+        isEdited={isEdited}
+        onSave={(newVal) => onInlineEditRequest(row.categoria, MONTH_KEYS[0], newVal)}
+      />
+      <VarCell value={row.varLY} />
+      <VarCell value={row.varLM} />
+      {/* Mês 1 — Editable */}
+      <EditableQtdCell
+        value={row.mes1}
+        originalValue={getOriginalValue(row.categoria, 1)}
+        onSave={(newVal) => onInlineEditRequest(row.categoria, MONTH_KEYS[1], newVal)}
+        isEdited={isEdited}
+      />
+      <VarCell value={row.varLY1} />
+      {/* Mês 2 — Editable */}
+      <EditableQtdCell
+        value={row.mes2}
+        originalValue={getOriginalValue(row.categoria, 2)}
+        onSave={(newVal) => onInlineEditRequest(row.categoria, MONTH_KEYS[2], newVal)}
+        isEdited={isEdited}
+      />
+      <VarCell value={row.varLY2} />
+      {/* Trimestre */}
+      <td className="px-2 py-2 text-right tabular-nums border-l border-border/50 bg-amber-50/30">{formatVal(row.triAnterior)}</td>
+      <td className="px-2 py-2 text-right tabular-nums bg-amber-50/30">{formatVal(row.penTrimestre)}</td>
+      <td className="px-2 py-2 text-right tabular-nums bg-amber-50/30">{formatVal(row.ultTrimestre)}</td>
+      <td className={`px-2 py-2 text-right font-bold tabular-nums bg-amber-50/30 ${isEdited ? "text-emerald-700" : ""}`}>
+        {formatVal(row.triAtual)}
+      </td>
+      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${(row.varTriLY ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
+        }`}>
+        {formatPct(row.varTriLY)}
+      </td>
+      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${(row.varTriPenTri ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
+        }`}>
+        {formatPct(row.varTriPenTri)}
+      </td>
+      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${(row.varTriUltTri ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
+        }`}>
+        {formatPct(row.varTriUltTri)}
+      </td>
+      {/* Comentários */}
+      <td className="px-2 py-2 border-l border-border/50">
+        <input
+          type="text"
+          placeholder="..."
+          value={comment}
+          onChange={(e) => onCommentChange(row.categoria, e.target.value)}
+          className="w-full min-w-[100px] text-xs px-2 py-1 border-0 bg-transparent hover:bg-accent focus:bg-white focus:ring-1 focus:ring-[#0F4C75]/20 rounded outline-none transition-all"
+        />
+      </td>
+    </tr>
+  );
+}, (prevProps, nextProps) => {
+  return prevProps.row === nextProps.row &&
+    prevProps.idx === nextProps.idx &&
+    prevProps.isEdited === nextProps.isEdited &&
+    prevProps.comment === nextProps.comment;
+});
 // Main Component
 // ============================================================
 export default function ComparisonTable() {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null);
-  const { filteredComparison, isFiltered, appliedFilters } = useFilters();
-  const { savedAdjustments, saveAdjustments, getSkuCountForItem, getMonthlyAdjustmentRatio, catN3toN4 } = useForecast();
+  const { filteredComparison, isFiltered, appliedFilters } = useFilters(useShallow(state => ({
+    filteredComparison: state.filteredComparison,
+    isFiltered: state.isFiltered,
+    appliedFilters: state.appliedFilters
+  })));
+  const { savedAdjustments, saveAdjustments, getSkuCountForItem, getMonthlyAdjustmentRatio, catN3toN4 } = useForecast(useShallow(state => ({
+    savedAdjustments: state.savedAdjustments,
+    saveAdjustments: state.saveAdjustments,
+    getSkuCountForItem: state.getSkuCountForItem,
+    getMonthlyAdjustmentRatio: state.getMonthlyAdjustmentRatio,
+    catN3toN4: state.catN3toN4
+  })));
   const hasCdFilter = appliedFilters.centroDistribuicao.length > 0;
+
+  const handleCommentChange = useCallback((categoria: string, val: string) => {
+    setComments((prev) => ({ ...prev, [categoria]: val }));
+  }, []);
 
   // Compute adjusted comparison data by applying saved adjustments (N3 + N4 + PRODUTO)
   // Uses getMonthlyAdjustmentRatio which already propagates N3 → N4
@@ -879,6 +991,22 @@ export default function ComparisonTable() {
     return originalRow.mes2;
   }, []);
 
+  // Set up virtualization
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: adjustedComparison.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 48,
+    overscan: 10,
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const paddingBottom = virtualItems.length > 0
+    ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
+    : 0;
+
   return (
     <div className="bg-white border border-border rounded-xl shadow-sm">
       {/* Confirmation Modal */}
@@ -955,7 +1083,10 @@ export default function ComparisonTable() {
 
       {/* Table with fixed height for ~15 rows */}
       <div className="overflow-x-auto custom-scrollbar">
-        <div className="max-h-[540px] overflow-y-auto custom-scrollbar">
+        <div
+          ref={tableContainerRef}
+          className="max-h-[540px] overflow-y-auto custom-scrollbar"
+        >
           <table className="w-full text-xs">
             <thead className="sticky top-0 z-20">
               <tr className="border-b border-border bg-[#F8FAFC]">
@@ -1018,89 +1149,30 @@ export default function ComparisonTable() {
                   </td>
                 </tr>
               ) : (
-                adjustedComparison.map((row, idx) => {
-                  const isEdited = editedCategories.has(row.categoria);
-                  return (
-                    <tr
-                      key={`${row.categoria}-${idx}`}
-                      className={`border-b border-border/50 transition-colors ${
-                        isEdited
-                          ? "bg-emerald-50/30 hover:bg-emerald-50/50"
-                          : idx % 2 === 0
-                            ? "bg-white hover:bg-[#0F4C75]/[0.02]"
-                            : "bg-[#F8FAFC]/50 hover:bg-[#0F4C75]/[0.02]"
-                      }`}
-                    >
-                      <td className={`sticky left-0 z-10 px-3 py-2 font-semibold text-foreground whitespace-nowrap text-xs ${
-                        isEdited ? "bg-emerald-50/30" : idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]/50"
-                      }`}>
-                        <div className="flex items-center gap-1.5">
-                          {isEdited && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
-                          <ConfidenceBadge categoria={row.categoria} />
-                          <span className="flex-shrink-0">{row.categoria}</span>
-                          <Sparkline categoria={row.categoria} />
-                        </div>
-                      </td>
-                      {/* Mês 0 — Editable */}
-                      <EditableQtdCell
-                        value={row.mes0}
-                        originalValue={getOriginalValue(row.categoria, 0)}
+                <>
+                  {paddingTop > 0 && (
+                    <tr><td style={{ height: `${paddingTop}px` }} colSpan={16} /></tr>
+                  )}
+                  {virtualItems.map((virtualRow) => {
+                    const row = adjustedComparison[virtualRow.index];
+                    const isEdited = editedCategories.has(row.categoria);
+                    return (
+                      <ComparisonTableRow
+                        key={`${row.categoria}-${virtualRow.index}`}
+                        row={row}
+                        idx={virtualRow.index}
                         isEdited={isEdited}
-                        onSave={(newVal) => handleInlineEditRequest(row.categoria, MONTH_KEYS[0], newVal)}
+                        comment={comments[row.categoria] || ""}
+                        onCommentChange={handleCommentChange}
+                        onInlineEditRequest={handleInlineEditRequest}
+                        getOriginalValue={getOriginalValue}
                       />
-                      <VarCell value={row.varLY} />
-                      <VarCell value={row.varLM} />
-                      {/* Mês 1 — Editable */}
-                      <EditableQtdCell
-                        value={row.mes1}
-                        originalValue={getOriginalValue(row.categoria, 1)}
-                        onSave={(newVal) => handleInlineEditRequest(row.categoria, MONTH_KEYS[1], newVal)}
-                        isEdited={isEdited}
-                      />
-                      <VarCell value={row.varLY1} />
-                      {/* Mês 2 — Editable */}
-                      <EditableQtdCell
-                        value={row.mes2}
-                        originalValue={getOriginalValue(row.categoria, 2)}
-                        onSave={(newVal) => handleInlineEditRequest(row.categoria, MONTH_KEYS[2], newVal)}
-                        isEdited={isEdited}
-                      />
-                      <VarCell value={row.varLY2} />
-                      {/* Trimestre */}
-                      <td className="px-2 py-2 text-right tabular-nums border-l border-border/50 bg-amber-50/30">{formatVal(row.triAnterior)}</td>
-                      <td className="px-2 py-2 text-right tabular-nums bg-amber-50/30">{formatVal(row.penTrimestre)}</td>
-                      <td className="px-2 py-2 text-right tabular-nums bg-amber-50/30">{formatVal(row.ultTrimestre)}</td>
-                      <td className={`px-2 py-2 text-right font-bold tabular-nums bg-amber-50/30 ${isEdited ? "text-emerald-700" : ""}`}>
-                        {formatVal(row.triAtual)}
-                      </td>
-                      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${
-                        (row.varTriLY ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
-                      }`}>
-                        {formatPct(row.varTriLY)}
-                      </td>
-                      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${
-                        (row.varTriPenTri ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
-                      }`}>
-                        {formatPct(row.varTriPenTri)}
-                      </td>
-                      <td className={`px-2 py-2 text-center font-semibold tabular-nums bg-amber-50/30 ${
-                        (row.varTriUltTri ?? 0) >= 0 ? "text-emerald-700" : "text-red-600"
-                      }`}>
-                        {formatPct(row.varTriUltTri)}
-                      </td>
-                      {/* Comentários */}
-                      <td className="px-2 py-2 border-l border-border/50">
-                        <input
-                          type="text"
-                          placeholder="..."
-                          value={comments[row.categoria] || ""}
-                          onChange={(e) => setComments({ ...comments, [row.categoria]: e.target.value })}
-                          className="w-full min-w-[100px] text-xs px-2 py-1 border-0 bg-transparent hover:bg-accent focus:bg-white focus:ring-1 focus:ring-[#0F4C75]/20 rounded outline-none transition-all"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <tr><td style={{ height: `${paddingBottom}px` }} colSpan={16} /></tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>

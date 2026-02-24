@@ -27,7 +27,9 @@ import {
   Download,
   AlertTriangle,
 } from "lucide-react";
+import { useDebounce } from "use-debounce";
 import { useForecast } from "@/contexts/ForecastContext";
+import { useShallow } from "zustand/react/shallow";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import {
@@ -65,12 +67,17 @@ const statusConfig: Record<AuditStatus, { label: string; color: string; bg: stri
 };
 
 export default function AuditLog() {
-  const { savedAdjustments, adjustedProducts, revertAdjustment } = useForecast();
+  const { savedAdjustments, adjustedProducts, revertAdjustment } = useForecast(useShallow(state => ({
+    savedAdjustments: state.savedAdjustments,
+    adjustedProducts: state.adjustedProducts,
+    revertAdjustment: state.revertAdjustment
+  })));
   const [expanded, setExpanded] = useState(true);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [filterUser, setFilterUser] = useState("");
   const [filterStatus, setFilterStatus] = useState<AuditStatus | "todos">("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
   const [revertTarget, setRevertTarget] = useState<AuditEntry | null>(null);
 
@@ -79,10 +86,10 @@ export default function AuditLog() {
     return savedAdjustments.map(adj => {
       const totalAjuste = Object.values(adj.monthlyValues).reduce((sum, val) => sum + val, 0);
       const avgAjuste = totalAjuste / Object.keys(adj.monthlyValues).length;
-      const valorAjusteStr = adj.type === "%" 
-        ? `${avgAjuste >= 0 ? "+" : ""}${avgAjuste.toFixed(1)}%` 
+      const valorAjusteStr = adj.type === "%"
+        ? `${avgAjuste >= 0 ? "+" : ""}${avgAjuste.toFixed(1)}%`
         : `${avgAjuste >= 0 ? "+" : ""}${avgAjuste.toLocaleString("pt-BR")}`;
-      
+
       return {
         id: adj.id,
         timestamp: new Date(adj.timestamp).toLocaleString("pt-BR", {
@@ -100,8 +107,8 @@ export default function AuditLog() {
         previsaoAnterior: adj.previsaoOriginal,
         previsaoNova: adj.previsaoAjustada,
         diferenca: adj.previsaoAjustada - adj.previsaoOriginal,
-        percentualImpacto: adj.previsaoOriginal > 0 
-          ? ((adj.previsaoAjustada - adj.previsaoOriginal) / adj.previsaoOriginal) * 100 
+        percentualImpacto: adj.previsaoOriginal > 0
+          ? ((adj.previsaoAjustada - adj.previsaoOriginal) / adj.previsaoOriginal) * 100
           : 0,
         status: adj.exported ? "aprovado" : "pendente",
         comentario: undefined,
@@ -115,8 +122,8 @@ export default function AuditLog() {
     return auditData.filter(entry => {
       if (filterUser && entry.usuario !== filterUser) return false;
       if (filterStatus !== "todos" && entry.status !== filterStatus) return false;
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
+      if (debouncedSearchTerm) {
+        const term = debouncedSearchTerm.toLowerCase();
         return (
           entry.item.toLowerCase().includes(term) ||
           entry.usuario.toLowerCase().includes(term) ||
@@ -125,7 +132,7 @@ export default function AuditLog() {
       }
       return true;
     });
-  }, [auditData, filterUser, filterStatus, searchTerm]);
+  }, [auditData, filterUser, filterStatus, debouncedSearchTerm]);
 
   // Summary stats
   const stats = useMemo(() => {
@@ -186,8 +193,8 @@ export default function AuditLog() {
         "Previsão Original": p.originalForecast,
         "Previsão Ajustada": p.forecast,
         "Diferença": p.forecast - p.originalForecast,
-        "Variação %": p.originalForecast > 0 
-          ? (((p.forecast - p.originalForecast) / p.originalForecast) * 100).toFixed(2) + "%" 
+        "Variação %": p.originalForecast > 0
+          ? (((p.forecast - p.originalForecast) / p.originalForecast) * 100).toFixed(2) + "%"
           : "0%",
       }));
 
@@ -203,20 +210,20 @@ export default function AuditLog() {
 
     // Criar workbook
     const wb = XLSX.utils.book_new();
-    
+
     const ws1 = XLSX.utils.json_to_sheet(resumoData);
     XLSX.utils.book_append_sheet(wb, ws1, "Resumo dos Ajustes");
-    
+
     const ws2 = XLSX.utils.json_to_sheet(produtosData);
     XLSX.utils.book_append_sheet(wb, ws2, "Produtos Afetados");
-    
+
     const ws3 = XLSX.utils.json_to_sheet(estatisticasData);
     XLSX.utils.book_append_sheet(wb, ws3, "Estatísticas");
 
     // Exportar
     const timestamp = new Date().toISOString().replace(/:/g, "-").split(".")[0];
     XLSX.writeFile(wb, `relatorio-ajustes-${timestamp}.xlsx`);
-    
+
     toast.success("Relatório Excel exportado com sucesso!");
   };
 
@@ -368,9 +375,8 @@ export default function AuditLog() {
                       >
                         {/* Timestamp & User */}
                         <div className="flex items-center gap-3 min-w-[220px]">
-                          <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
-                            isPositive ? "bg-emerald-50" : "bg-red-50"
-                          }`}>
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${isPositive ? "bg-emerald-50" : "bg-red-50"
+                            }`}>
                             {isPositive ? (
                               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
                             ) : (

@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { allProducts } from "@/lib/mockData";
 import { useForecast, type AdjustmentLevel, type AdjustmentType, type SavedAdjustment } from "@/contexts/ForecastContext";
 import { usePeriod } from "@/contexts/PeriodContext";
+import { useShallow } from "zustand/react/shallow";
+import { useDebounce } from "use-debounce";
 import { DEFAULT_USER } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -45,10 +47,16 @@ export default function SupplierAdjustment() {
   const [rows, setRows] = useState<SupplierAdjustmentRow[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
+  const [debouncedSearchTerms] = useDebounce(searchTerms, 200);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSave, setPendingSave] = useState<SavedAdjustment[]>([]);
   const tableRef = useRef<HTMLDivElement>(null);
-  const { saveAdjustments, getMonthlyForecastForItem, getSkuCountForItem, catN3toN4 } = useForecast();
+  const { saveAdjustments, getMonthlyForecastForItem, getSkuCountForItem, catN3toN4 } = useForecast(useShallow(state => ({
+    saveAdjustments: state.saveAdjustments,
+    getMonthlyForecastForItem: state.getMonthlyForecastForItem,
+    getSkuCountForItem: state.getSkuCountForItem,
+    catN3toN4: state.catN3toN4
+  })));
   const { activeMonths } = usePeriod();
 
   // Build supplier → products/categories mapping from actual product data
@@ -310,7 +318,8 @@ export default function SupplierAdjustment() {
     placeholder: string,
     width: string = "w-[320px]",
   ) {
-    const searchTerm = (searchTerms[`${rowId}-${dropdownKey}`] || "").toLowerCase();
+    const searchTerm = (debouncedSearchTerms[`${rowId}-${dropdownKey}`] || "").toLowerCase();
+    const inputValue = searchTerms[`${rowId}-${dropdownKey}`] || "";
     const filteredOptions = searchTerm
       ? options.filter(o => o.toLowerCase().includes(searchTerm))
       : options;
@@ -323,7 +332,7 @@ export default function SupplierAdjustment() {
             <input
               type="text"
               placeholder={`Buscar ${placeholder.toLowerCase()}...`}
-              value={searchTerms[`${rowId}-${dropdownKey}`] || ""}
+              value={inputValue}
               onChange={(e) => setSearchTerms(prev => ({ ...prev, [`${rowId}-${dropdownKey}`]: e.target.value }))}
               autoFocus
               className="w-full h-7 pl-7 pr-2 text-xs border border-border rounded-md focus:outline-none focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
@@ -353,9 +362,8 @@ export default function SupplierAdjustment() {
                     setOpenDropdown(null);
                     setSearchTerms(prev => ({ ...prev, [`${rowId}-${dropdownKey}`]: "" }));
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${
-                    currentValue === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
-                  }`}
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${currentValue === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                    }`}
                 >
                   {searchTerm && idx >= 0 ? (
                     <>{before}<mark className="bg-yellow-200 text-inherit rounded-sm px-0.5">{match}</mark>{after}</>
@@ -534,11 +542,10 @@ export default function SupplierAdjustment() {
                         <button
                           onClick={() => setOpenDropdown(openDropdown === `level-${row.id}` ? null : `level-${row.id}`)}
                           disabled={!row.fornecedor}
-                          className={`flex items-center justify-between w-full h-7 px-2 text-[11px] border rounded-lg transition-colors ${
-                            !row.fornecedor
-                              ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
-                              : "bg-white border-border hover:border-violet-300"
-                          }`}
+                          className={`flex items-center justify-between w-full h-7 px-2 text-[11px] border rounded-lg transition-colors ${!row.fornecedor
+                            ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
+                            : "bg-white border-border hover:border-violet-300"
+                            }`}
                         >
                           <div className="flex items-center gap-1">
                             {row.level === "PRODUTO" ? (
@@ -558,9 +565,8 @@ export default function SupplierAdjustment() {
                                 <button
                                   key={level}
                                   onClick={() => { updateRow(row.id, "level", level); setOpenDropdown(null); }}
-                                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center justify-between ${
-                                    row.level === level ? "bg-violet-50 text-violet-700 font-semibold" : ""
-                                  }`}
+                                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center justify-between ${row.level === level ? "bg-violet-50 text-violet-700 font-semibold" : ""
+                                    }`}
                                 >
                                   <div className="flex items-center gap-2">
                                     {level === "PRODUTO" ? (
@@ -606,11 +612,10 @@ export default function SupplierAdjustment() {
                               setSearchTerms(prev => ({ ...prev, [`${row.id}-item`]: "" }));
                             }}
                             disabled={!row.fornecedor}
-                            className={`flex items-center justify-between w-full h-7 px-2 text-[11px] border rounded-lg transition-colors ${
-                              !row.fornecedor
-                                ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
-                                : "bg-amber-50 border-amber-200 hover:border-amber-300"
-                            }`}
+                            className={`flex items-center justify-between w-full h-7 px-2 text-[11px] border rounded-lg transition-colors ${!row.fornecedor
+                              ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
+                              : "bg-amber-50 border-amber-200 hover:border-amber-300"
+                              }`}
                           >
                             <span className="text-muted-foreground truncate">
                               {!row.fornecedor ? "Selecione fornecedor..." : "Selecione item..."}
@@ -642,21 +647,19 @@ export default function SupplierAdjustment() {
                       <div className="flex items-center justify-center gap-0.5 bg-muted rounded-lg p-0.5">
                         <button
                           onClick={() => updateRow(row.id, "type", "%")}
-                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            row.type === "%"
-                              ? "bg-white text-violet-700 shadow-sm"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "%"
+                            ? "bg-white text-violet-700 shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                            }`}
                         >
                           %
                         </button>
                         <button
                           onClick={() => updateRow(row.id, "type", "QTD")}
-                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                            row.type === "QTD"
-                              ? "bg-white text-violet-700 shadow-sm"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "QTD"
+                            ? "bg-white text-violet-700 shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                            }`}
                         >
                           QTD
                         </button>
@@ -679,13 +682,12 @@ export default function SupplierAdjustment() {
                               value={row.monthlyValues[month] ?? ""}
                               onChange={(e) => updateMonthlyValue(row.id, month, e.target.value)}
                               disabled={!row.item}
-                              className={`w-full h-7 px-1.5 text-[11px] text-center font-semibold tabular-nums border rounded-lg outline-none transition-all ${
-                                !row.item
-                                  ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
-                                  : hasValue
-                                    ? "border-violet-300 bg-violet-50 text-violet-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-200"
-                                    : "border-border hover:border-violet-300 focus:border-violet-500 focus:ring-1 focus:ring-violet-200"
-                              }`}
+                              className={`w-full h-7 px-1.5 text-[11px] text-center font-semibold tabular-nums border rounded-lg outline-none transition-all ${!row.item
+                                ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
+                                : hasValue
+                                  ? "border-violet-300 bg-violet-50 text-violet-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-200"
+                                  : "border-border hover:border-violet-300 focus:border-violet-500 focus:ring-1 focus:ring-violet-200"
+                                }`}
                             />
                             {row.item && (
                               <span className="text-[8px] text-muted-foreground tabular-nums">
@@ -708,9 +710,8 @@ export default function SupplierAdjustment() {
                     </td>
 
                     {/* Diferença */}
-                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${
-                      totals.diff > 0 ? "text-emerald-700" : totals.diff < 0 ? "text-red-600" : "text-muted-foreground"
-                    }`}>
+                    <td className={`px-2 py-2 text-right font-semibold tabular-nums ${totals.diff > 0 ? "text-emerald-700" : totals.diff < 0 ? "text-red-600" : "text-muted-foreground"
+                      }`}>
                       {totals.original > 0 && totals.diff !== 0
                         ? `${totals.diff > 0 ? "+" : ""}${totals.diff.toLocaleString("pt-BR")}`
                         : "—"
@@ -815,9 +816,8 @@ export default function SupplierAdjustment() {
                       <span className="text-sm font-semibold text-foreground">{adj.item}</span>
                       <span className="text-[10px] text-muted-foreground ml-2">{adj.level}</span>
                     </div>
-                    <span className={`text-xs font-bold ${
-                      diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"
-                    }`}>
+                    <span className={`text-xs font-bold ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"
+                      }`}>
                       {diff > 0 ? "+" : ""}{pct}%
                     </span>
                   </div>
@@ -834,11 +834,10 @@ export default function SupplierAdjustment() {
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between text-sm font-bold">
                 <span>Impacto Total:</span>
-                <span className={`${
-                  pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0
-                    ? "text-emerald-600"
-                    : "text-red-600"
-                }`}>
+                <span className={`${pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0
+                  ? "text-emerald-600"
+                  : "text-red-600"
+                  }`}>
                   {pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0) > 0 ? "+" : ""}
                   {pendingSave.reduce((s, a) => s + (a.previsaoAjustada - a.previsaoOriginal), 0).toLocaleString("pt-BR")} un.
                 </span>
