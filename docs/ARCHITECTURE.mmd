@@ -1,0 +1,66 @@
+graph TB
+    subgraph "Navegador (Frontend)"
+        A[React 19 + TypeScript] --> B[Wouter Router]
+        B --> C[Home.tsx - Dashboard]
+        
+        C --> D[Header.tsx<br/>Período + Comprador]
+        C --> E[KpiCards.tsx<br/>4 Indicadores]
+        C --> F[SalesChart.tsx<br/>Gráfico Recharts]
+        C --> G[ComparisonTable.tsx<br/>19 Categorias]
+        C --> H[ProductTable.tsx<br/>881 Produtos]
+        C --> I[ForecastAdjustment.tsx<br/>Ajustes %]
+        C --> J[AuditLog.tsx<br/>Log Auditoria]
+        C --> K[ExportButtons.tsx<br/>Excel + PDF]
+        
+        subgraph "Contexts (Estado Global)"
+            L[FilterContext<br/>Filtros + Agregação]
+            M[ForecastContext<br/>Ajustes + Auditoria]
+            N[PeriodContext<br/>Período Selecionado]
+        end
+        
+        L --> E
+        L --> F
+        L --> G
+        L --> H
+        M --> I
+        M --> J
+        N --> D
+    end
+    
+    subgraph "Dados (Atual: Estático)"
+        O[mockData.ts<br/>881 produtos<br/>57 fornecedores<br/>28 categorias]
+        P[LocalStorage<br/>Ajustes + Auditoria]
+    end
+    
+    O --> L
+    M --> P
+    
+    subgraph "Exportação"
+        Q[exportExcel.ts<br/>SheetJS xlsx]
+        R[exportPdf.ts<br/>jsPDF + html2canvas]
+    end
+    
+    K --> Q
+    K --> R
+    
+    subgraph "Produção (Futuro)"
+        S[API REST<br/>Node.js + Express]
+        T[PostgreSQL<br/>Ajustes + Auditoria]
+        U[Redis<br/>Cache + Sessões]
+        V[Datalake<br/>Previsões + Histórico]
+    end
+    
+    S -.-> T
+    S -.-> U
+    S -.-> V
+    
+    style A fill:#0d9488,color:#fff
+    style L fill:#f59e0b,color:#000
+    style M fill:#f59e0b,color:#000
+    style N fill:#f59e0b,color:#000
+    style O fill:#3b82f6,color:#fff
+    style P fill:#3b82f6,color:#fff
+    style S fill:#6b7280,color:#fff,stroke-dasharray: 5 5
+    style T fill:#6b7280,color:#fff,stroke-dasharray: 5 5
+    style U fill:#6b7280,color:#fff,stroke-dasharray: 5 5
+    style V fill:#6b7280,color:#fff,stroke-dasharray: 5 5

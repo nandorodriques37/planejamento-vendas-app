@@ -1,0 +1,133 @@
+/*
+  Header Component — Clean Pharma Analytics
+  Barra superior com logo, título, filtro de período e informações do usuário
+  
+  FILTRO DE PERÍODO:
+  - Dois dropdowns para selecionar mês início e mês fim
+  - Atualiza o PeriodContext que controla as colunas da tabela de ajustes
+*/
+import { useState, useRef, useEffect } from "react";
+import { BarChart3, Bell, User, Calendar, ChevronDown } from "lucide-react";
+import { DEFAULT_USER } from "@/lib/constants";
+import { usePeriod } from "@/contexts/PeriodContext";
+import { getPeriodDescriptionWithCount } from "@/lib/dateUtils";
+
+export default function Header() {
+  const { startMonth, endMonth, activeMonths, monthOptions, setStartMonth, setEndMonth, periodLabel } = usePeriod();
+  const [openDropdown, setOpenDropdown] = useState<"start" | "end" | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur-md">
+      <div className="flex items-center justify-between px-6 h-16">
+        {/* Logo & Title */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0F4C75] text-white">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-[#0F4C75] leading-tight tracking-tight">
+              Previsão de Vendas
+            </h1>
+            <p className="text-[11px] text-muted-foreground font-medium leading-tight">
+              Plataforma Colaborativa
+            </p>
+          </div>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-4">
+          {/* Period selector */}
+          <div ref={dropdownRef} className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#0F4C75]" />
+            <span className="text-xs text-muted-foreground font-medium">Período:</span>
+            
+            {/* Start month dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "start" ? null : "start")}
+                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-[#0F4C75] bg-[#0F4C75]/5 border border-[#0F4C75]/20 rounded-lg hover:bg-[#0F4C75]/10 transition-colors"
+              >
+                {startMonth}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {openDropdown === "start" && (
+                <div className="absolute top-full left-0 mt-1 w-28 bg-white border border-border rounded-lg shadow-lg z-[100] max-h-48 overflow-auto custom-scrollbar">
+                  {monthOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setStartMonth(opt.value); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${
+                        opt.value === startMonth ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span className="text-xs text-muted-foreground">—</span>
+
+            {/* End month dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setOpenDropdown(openDropdown === "end" ? null : "end")}
+                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-[#0F4C75] bg-[#0F4C75]/5 border border-[#0F4C75]/20 rounded-lg hover:bg-[#0F4C75]/10 transition-colors"
+              >
+                {endMonth}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {openDropdown === "end" && (
+                <div className="absolute top-full right-0 mt-1 w-28 bg-white border border-border rounded-lg shadow-lg z-[100] max-h-48 overflow-auto custom-scrollbar">
+                  {monthOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setEndMonth(opt.value); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${
+                        opt.value === endMonth ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {activeMonths.length} mês(es)
+            </span>
+          </div>
+
+          <div className="h-6 w-px bg-border" />
+          <button className="relative p-2 rounded-lg hover:bg-accent transition-colors">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#059669] rounded-full" />
+          </button>
+          <div className="flex items-center gap-2 pl-2 border-l border-border">
+            <div className="w-8 h-8 rounded-full bg-[#0F4C75]/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-[#0F4C75]" />
+            </div>
+            <div className="hidden md:block">
+              <p className="text-sm font-semibold leading-tight">Comprador</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">{DEFAULT_USER}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
