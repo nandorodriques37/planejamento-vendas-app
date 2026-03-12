@@ -9,7 +9,7 @@
   - Bloqueio de duplicatas
   - Controle de exportação para evitar duplicidade no datalake
 */
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Plus, Trash2, Save, ChevronDown, AlertCircle, Sliders, GitBranch, Package, Download, Search, X } from "lucide-react";
 import {
   Dialog,
@@ -90,7 +90,7 @@ export default function AdjustmentTable() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function addRow() {
+  const addRow = useCallback(() => {
     const monthlyValues: Record<string, number | string> = {};
     for (const m of activeMonths) {
       monthlyValues[m] = "";
@@ -102,15 +102,15 @@ export default function AdjustmentTable() {
       type: "%",
       monthlyValues,
     };
-    setRows([...rows, newRow]);
-  }
+    setRows(prev => [...prev, newRow]);
+  }, [activeMonths]);
 
-  function removeRow(id: string) {
-    setRows(rows.filter(r => r.id !== id));
-  }
+  const removeRow = useCallback((id: string) => {
+    setRows(prev => prev.filter(r => r.id !== id));
+  }, []);
 
-  function updateRow(id: string, field: keyof AdjustmentRow, value: any) {
-    setRows(rows.map(r => {
+  const updateRow = useCallback((id: string, field: keyof AdjustmentRow, value: any) => {
+    setRows(prev => prev.map(r => {
       if (r.id !== id) return r;
       const updated = { ...r, [field]: value };
 
@@ -135,21 +135,21 @@ export default function AdjustmentTable() {
 
       return updated;
     }));
-  }
+  }, [activeMonths]);
 
-  function updateMonthlyValue(id: string, month: string, value: string) {
-    setRows(rows.map(r => {
+  const updateMonthlyValue = useCallback((id: string, month: string, value: string) => {
+    setRows(prev => prev.map(r => {
       if (r.id !== id) return r;
       return {
         ...r,
         monthlyValues: { ...r.monthlyValues, [month]: value },
       };
     }));
-  }
+  }, []);
 
   // Apply same value to all months
-  function applyToAllMonths(id: string, value: string) {
-    setRows(rows.map(r => {
+  const applyToAllMonths = useCallback((id: string, value: string) => {
+    setRows(prev => prev.map(r => {
       if (r.id !== id) return r;
       const monthlyValues: Record<string, number | string> = {};
       for (const m of activeMonths) {
@@ -157,7 +157,7 @@ export default function AdjustmentTable() {
       }
       return { ...r, monthlyValues };
     }));
-  }
+  }, [activeMonths]);
 
   // Calculate totals for a row
   function getRowTotals(row: AdjustmentRow) {
@@ -547,7 +547,7 @@ export default function AdjustmentTable() {
                                     const after = opt.slice(idx + searchTerm.length);
                                     return (
                                       <button
-                                        key={`${opt}-${optIdx}`}
+                                        key={opt}
                                         onClick={() => {
                                           updateRow(row.id, "item", opt);
                                           setOpenDropdown(null);

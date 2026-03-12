@@ -2,6 +2,10 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import productsRouter from "./routes/products";
+import forecastRouter from "./routes/forecast";
+import adjustmentsRouter from "./routes/adjustments";
+import filtersRouter from "./routes/filters";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +13,15 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Parse JSON bodies for API requests
+  app.use(express.json({ limit: "10mb" }));
+
+  // API routes
+  app.use("/api/products", productsRouter);
+  app.use("/api/forecast", forecastRouter);
+  app.use("/api/adjustments", adjustmentsRouter);
+  app.use("/api/filters", filtersRouter);
 
   // Serve static files from dist/public in production
   const staticPath =
