@@ -239,8 +239,8 @@ export default function AuditLog() {
           className="flex items-center justify-between w-full px-5 py-4 border-b border-border hover:bg-accent/30 transition-colors rounded-t-xl cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0F4C75]/10">
-              <History className="w-4 h-4 text-[#0F4C75]" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+              <History className="w-4 h-4 text-primary" />
             </div>
             <div className="text-left">
               <h2 className="text-sm font-bold text-foreground">Histórico de Ajustes</h2>
@@ -298,7 +298,7 @@ export default function AuditLog() {
                   placeholder="Buscar por item, usuário ou comentário..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 text-xs border border-border rounded-lg hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20 outline-none transition-all bg-white"
+                  className="w-full h-8 pl-8 pr-3 text-xs border border-border rounded-lg hover:border-primary/30 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all bg-white"
                 />
               </div>
 
@@ -308,7 +308,7 @@ export default function AuditLog() {
                 <select
                   value={filterUser}
                   onChange={(e) => setFilterUser(e.target.value)}
-                  className="h-8 px-2.5 text-xs border border-border rounded-lg hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20 outline-none transition-all bg-white cursor-pointer"
+                  className="h-8 px-2.5 text-xs border border-border rounded-lg hover:border-primary/30 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all bg-white cursor-pointer"
                 >
                   <option value="">Todos os usuários</option>
                   {uniqueUsers.map(u => (
@@ -323,7 +323,7 @@ export default function AuditLog() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as AuditStatus | "todos")}
-                  className="h-8 px-2.5 text-xs border border-border rounded-lg hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20 outline-none transition-all bg-white cursor-pointer"
+                  className="h-8 px-2.5 text-xs border border-border rounded-lg hover:border-primary/30 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all bg-white cursor-pointer"
                 >
                   <option value="todos">Todos os status</option>
                   <option value="aprovado">Aprovado</option>
@@ -334,7 +334,7 @@ export default function AuditLog() {
             </div>
 
             {/* Impact summary bar */}
-            <div className="flex items-center gap-6 px-5 py-2.5 border-b border-border bg-[#0F4C75]/[0.02]">
+            <div className="flex items-center gap-6 px-5 py-2.5 border-b border-border bg-primary/[0.02]">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Impacto Total (Aprovados):</span>
                 <span className={`text-xs font-bold tabular-nums ${stats.impactoTotal >= 0 ? "text-emerald-700" : "text-red-600"}`}>
@@ -398,7 +398,7 @@ export default function AuditLog() {
                         {/* Item info */}
                         <div className="flex-1 min-w-0 px-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-[#0F4C75]/60 uppercase tracking-wider">{entry.nivel}</span>
+                            <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">{entry.nivel}</span>
                           </div>
                           <p className="text-xs font-semibold text-foreground truncate mt-0.5">{entry.item}</p>
                         </div>

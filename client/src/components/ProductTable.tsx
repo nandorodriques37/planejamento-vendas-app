@@ -14,7 +14,7 @@ import { useFilters } from "@/contexts/FilterContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useForecast } from "@/contexts/ForecastContext";
 import { useShallow } from "zustand/react/shallow";
-import { catN4CdMonthlyForecast, allProducts as allProductsRaw } from "@/lib/mockData";
+import { catN4CdMonthlyForecast, allProducts as allProductsRaw } from "@/services/dataProvider";
 
 type SortField = "codigo" | "nome" | "categoria3" | "categoria4" | "comprador" | "cd" | "originalForecast" | "forecast";
 type SortDir = "asc" | "desc";
@@ -143,12 +143,12 @@ export default function ProductTable() {
   const renderSortHeader = useCallback((field: SortField, label: string, align = "left") => (
     <th
       key={field}
-      className={`px-3 py-2 cursor-pointer hover:bg-[#0F4C75]/5 transition-colors select-none ${align === "right" ? "text-right" : "text-left"}`}
+      className={`px-3 py-2 cursor-pointer hover:bg-primary/5 transition-colors select-none ${align === "right" ? "text-right" : "text-left"}`}
       onClick={() => toggleSort(field)}
     >
       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1">
         {label}
-        <ArrowUpDown className={`w-2.5 h-2.5 ${sortField === field ? "text-[#0F4C75]" : "text-muted-foreground/40"}`} />
+        <ArrowUpDown className={`w-2.5 h-2.5 ${sortField === field ? "text-primary" : "text-muted-foreground/40"}`} />
       </span>
     </th>
   ), [toggleSort, sortField]);
@@ -159,14 +159,14 @@ export default function ProductTable() {
       <div className="px-5 py-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0F4C75]/10">
-              <Package className="w-4 h-4 text-[#0F4C75]" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+              <Package className="w-4 h-4 text-primary" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground">Detalhamento por Produto</h2>
               <p className="text-[11px] text-muted-foreground">
                 {sortedProducts.length} produto(s) · Previsão total: {formatVal(sortedProducts.reduce((s, p) => s + p.forecast, 0))} un.
-                {isFiltered && <span className="text-[#0F4C75] font-semibold ml-1">(filtrado)</span>}
+                {isFiltered && <span className="text-primary font-semibold ml-1">(filtrado)</span>}
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function ProductTable() {
               placeholder="Buscar por código, nome ou categoria..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F4C75]/20 focus:border-[#0F4C75] transition-all"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
             {searchQuery && (
               <button
@@ -234,14 +234,14 @@ export default function ProductTable() {
                       return (
                         <tr
                           key={`${product.codigo}-${product.cd}`}
-                          className={`border-b border-border/50 hover:bg-[#0F4C75]/[0.02] transition-colors ${hasAdjustment
+                          className={`border-b border-border/50 hover:bg-primary/[0.02] transition-colors ${hasAdjustment
                             ? isIncrease
                               ? "bg-emerald-50/50"
                               : "bg-red-50/50"
                             : virtualRow.index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]/50"
                             }`}
                         >
-                          <td className="px-3 py-2 font-mono font-semibold text-[#0F4C75] tabular-nums whitespace-nowrap">
+                          <td className="px-3 py-2 font-mono font-semibold text-primary tabular-nums whitespace-nowrap">
                             {product.codigo}
                           </td>
                           <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap max-w-[300px] truncate" title={product.nome}>
@@ -251,7 +251,7 @@ export default function ProductTable() {
                             {product.categoria3}
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0F4C75]/8 text-[#0F4C75]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/8 text-primary">
                               {product.categoria4}
                             </span>
                           </td>

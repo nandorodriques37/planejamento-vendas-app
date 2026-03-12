@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLocation, Link } from "wouter";
-import { useAuthStore } from "@/store/authStore";
+import * as authService from "@/services/authService";
 import {
     Card,
     CardContent,
@@ -31,8 +31,6 @@ const loginSchema = z.object({
 
 export default function Login() {
     const [, setLocation] = useLocation();
-    const { login, users } = useAuthStore();
-
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -41,27 +39,19 @@ export default function Login() {
         },
     });
 
-    function onSubmit(values: z.infer<typeof loginSchema>) {
-        // Mock login functionality reading from users store
-        const user = users.find(u => u.email === values.email);
+    async function onSubmit(values: z.infer<typeof loginSchema>) {
+        const result = await authService.login(values.email, values.password);
 
-        // Allow login if password matches, OR if user mock doesn't have a password yet (legacy mock data)
-        const passwordMatches = !user?.password || user.password === values.password;
-
-        if (user && passwordMatches) {
-            login(user);
-
+        if (result.success) {
             toast.success("Login efetuado com sucesso!", {
                 icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
                 style: {
                     border: '1px solid #10b981',
                 }
             });
-
-            // Redirect to home
             setLocation("/");
         } else {
-            toast.error("Credenciais inválidas. E-mail ou senha incorretos.", {
+            toast.error(result.error, {
                 style: {
                     border: '1px solid #ef4444',
                 }

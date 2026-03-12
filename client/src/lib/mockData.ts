@@ -4029,23 +4029,7 @@ export const catN4CdMonthlyForecast: Record<string, Record<string, Record<string
 }
 ;
 
-export interface ComparisonRow {
-  categoria: string;
-  mes0: number | null;
-  varLY: number | null;
-  varLM: number | null;
-  mes1: number | null;
-  varLY1: number | null;
-  mes2: number | null;
-  varLY2: number | null;
-  triAnterior: number | null;
-  penTrimestre: number | null;
-  ultTrimestre: number | null;
-  triAtual: number | null;
-  varTriLY: number | null;
-  varTriPenTri: number | null;
-  varTriUltTri: number | null;
-}
+export type { ComparisonRow } from "@/types/domain";
 
 export const comparisonData: ComparisonRow[] = [
   {   categoria: "ANALGESICO-ANTITERMICO",   mes0: 1102,   varLY: 159.9,   varLM: 101.5,   mes1: 1487,   varLY1: 142.6,   mes2: 1185,   varLY2: 152.1,   triAnterior: 1507,   penTrimestre: 2065,   ultTrimestre: 2003,   triAtual: 3774,   varTriLY: 150.4,   varTriPenTri: 82.8,   varTriUltTri: 88.4 },
@@ -4208,17 +4192,8 @@ export const fornecedores = [
   "ZODIAC AME"
 ];
 
-export interface Product {
-  codigo: number;
-  nome: string;
-  categoria3: string;
-  categoria4: string;
-  comprador: string;
-  cd: string;
-  fornecedor: string;
-  forecast: number;
-  originalForecast: number;
-}
+export type { Product } from "@/types/domain";
+import type { Product } from "@/types/domain";
 
 export const allProducts: Product[] = [
   {

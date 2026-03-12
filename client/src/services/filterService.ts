@@ -12,7 +12,7 @@ import {
   compradores,
   fornecedores,
   sampleProducts,
-} from "@/lib/mockData";
+} from "@/services/dataProvider";
 import type { FilterOptionsResponse } from "@/types/api";
 
 /**

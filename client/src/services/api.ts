@@ -58,6 +58,15 @@ export const apiClient = {
     return handleResponse<T>(response);
   },
 
+  async patch<T>(endpoint: string, body?: unknown): Promise<T> {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return handleResponse<T>(response);
+  },
+
   async delete<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "DELETE",

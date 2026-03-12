@@ -4,9 +4,9 @@
  * Usado por KpiCards e ExportButtons para evitar duplicação de lógica.
  */
 import { useMemo } from "react";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { DATA_BOUNDARIES } from "@/services/dataProvider";
 import type { FilteredMonthlyPoint } from "@/contexts/FilterContext";
-import type { Product } from "@/lib/mockData";
+import type { Product } from "@/types/domain";
 
 export interface KpiValues {
   mesAtual: number;

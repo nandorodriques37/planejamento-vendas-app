@@ -66,7 +66,7 @@ function HomeContent() {
             height={480}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F4C75]/80 via-[#0F4C75]/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent" />
           <div className="absolute inset-0 flex items-center px-6">
             <div>
               <h2 className="text-xl font-extrabold text-white tracking-tight">

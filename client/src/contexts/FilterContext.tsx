@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { type Product } from "@/lib/mockData";
+import type { Product } from "@/types/domain";
 import { useFilterStore } from "../store/filterStore";
 
 export type { FilterState, FilteredMonthlyPoint } from "../store/filterStore";
