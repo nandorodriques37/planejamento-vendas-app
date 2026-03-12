@@ -7,7 +7,7 @@
   - Usa getMonthlyAdjustmentRatio do ForecastContext para ajuste proporcional
 */
 import { Package, ArrowUpDown, TrendingUp, TrendingDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDebounce } from "use-debounce";
 import { useFilters } from "@/contexts/FilterContext";
@@ -36,34 +36,55 @@ export default function ProductTable() {
     isFiltered: state.isFiltered
   })));
   const { activeMonths } = usePeriod();
-  const getMonthlyAdjustmentRatio = useForecast(state => state.getMonthlyAdjustmentRatio);
+  const { getMonthlyAdjustmentRatio, monthlyAdjustmentMap } = useForecast(useShallow(state => ({
+    getMonthlyAdjustmentRatio: state.getMonthlyAdjustmentRatio,
+    monthlyAdjustmentMap: state.monthlyAdjustmentMap,
+  })));
   const [sortField, setSortField] = useState<SortField>("forecast");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
-  const toggleSort = (field: SortField) => {
+  const toggleSort = useCallback((field: SortField) => {
     if (sortField === field) {
       setSortDir(prev => prev === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDir("desc");
     }
-  };
+  }, [sortField]);
 
   // Compute period-aware forecasts for each product
-  // Sums only the activeMonths from PeriodContext (e.g., Fev/26 — Dez/26)
+  // Pre-compute catCd monthly sums and ratios to avoid redundant lookups
   const productsWithPeriod = useMemo(() => {
+    // Pre-compute monthly forecast sums per catCd group (avoids repeated catN4CdMonthlyForecast lookups)
+    const catCdMonthCache = new Map<string, number>();
+    const getCatCdMonth = (cat4: string, cd: string, month: string) => {
+      const cacheKey = `${cat4}|${cd}|${month}`;
+      let val = catCdMonthCache.get(cacheKey);
+      if (val === undefined) {
+        val = catN4CdMonthlyForecast[cat4]?.[cd]?.[month] || 0;
+        catCdMonthCache.set(cacheKey, val);
+      }
+      return val;
+    };
+
+    // Pre-compute weight per catCd group (shared across products in same group)
+    const weightCache = new Map<string, number>();
+    const getWeight = (cat4: string, cd: string, originalForecast: number) => {
+      const key = `${cat4}|${cd}`;
+      const totalForCatCd = _catCdTotals[key] || 1;
+      return originalForecast / totalForCatCd;
+    };
+
     return filteredProducts.map(product => {
-      const catCdKey = `${product.categoria4}|${product.cd}`;
-      const totalForCatCd = _catCdTotals[catCdKey] || 1;
-      const weight = product.originalForecast / totalForCatCd;
+      const weight = getWeight(product.categoria4, product.cd, product.originalForecast);
 
       let periodOriginal = 0;
       let periodAdjusted = 0;
 
       for (const month of activeMonths) {
-        const catCdMonthForecast = catN4CdMonthlyForecast[product.categoria4]?.[product.cd]?.[month] || 0;
+        const catCdMonthForecast = getCatCdMonth(product.categoria4, product.cd, month);
         const productMonthForecast = catCdMonthForecast * weight;
         const ratio = getMonthlyAdjustmentRatio(product.categoria4, product.cd, month);
 
@@ -77,7 +98,7 @@ export default function ProductTable() {
         forecast: Math.round(periodAdjusted),
       };
     });
-  }, [filteredProducts, activeMonths, getMonthlyAdjustmentRatio]);
+  }, [filteredProducts, activeMonths, monthlyAdjustmentMap]);
 
   const searchedProducts = useMemo(() => {
     if (!debouncedSearchQuery.trim()) return productsWithPeriod;
@@ -119,8 +140,9 @@ export default function ProductTable() {
     ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
     : 0;
 
-  const SortHeader = ({ field, label, align = "left" }: { field: SortField; label: string; align?: string }) => (
+  const renderSortHeader = useCallback((field: SortField, label: string, align = "left") => (
     <th
+      key={field}
       className={`px-3 py-2 cursor-pointer hover:bg-[#0F4C75]/5 transition-colors select-none ${align === "right" ? "text-right" : "text-left"}`}
       onClick={() => toggleSort(field)}
     >
@@ -129,7 +151,7 @@ export default function ProductTable() {
         <ArrowUpDown className={`w-2.5 h-2.5 ${sortField === field ? "text-[#0F4C75]" : "text-muted-foreground/40"}`} />
       </span>
     </th>
-  );
+  ), [toggleSort, sortField]);
 
   return (
     <div className="bg-white border border-border rounded-xl shadow-sm">
@@ -179,14 +201,14 @@ export default function ProductTable() {
             <table className="w-full text-xs">
               <thead className="sticky top-0 z-20 bg-[#F8FAFC]">
                 <tr className="border-b-2 border-border">
-                  <SortHeader field="codigo" label="Código" />
-                  <SortHeader field="nome" label="Nome do Produto" />
-                  <SortHeader field="categoria3" label="Cat. Nível 3" />
-                  <SortHeader field="categoria4" label="Cat. Nível 4" />
-                  <SortHeader field="comprador" label="Comprador" />
-                  <SortHeader field="cd" label="CD" />
-                  <SortHeader field="originalForecast" label="Previsão Original (un.)" align="right" />
-                  <SortHeader field="forecast" label="Previsão Ajustada (un.)" align="right" />
+                  {renderSortHeader("codigo", "Código")}
+                  {renderSortHeader("nome", "Nome do Produto")}
+                  {renderSortHeader("categoria3", "Cat. Nível 3")}
+                  {renderSortHeader("categoria4", "Cat. Nível 4")}
+                  {renderSortHeader("comprador", "Comprador")}
+                  {renderSortHeader("cd", "CD")}
+                  {renderSortHeader("originalForecast", "Previsão Original (un.)", "right")}
+                  {renderSortHeader("forecast", "Previsão Ajustada (un.)", "right")}
                 </tr>
               </thead>
               <tbody>
@@ -211,7 +233,7 @@ export default function ProductTable() {
 
                       return (
                         <tr
-                          key={`${product.codigo}-${virtualRow.index}`}
+                          key={`${product.codigo}-${product.cd}`}
                           className={`border-b border-border/50 hover:bg-[#0F4C75]/[0.02] transition-colors ${hasAdjustment
                             ? isIncrease
                               ? "bg-emerald-50/50"

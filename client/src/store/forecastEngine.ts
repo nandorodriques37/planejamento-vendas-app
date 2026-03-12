@@ -81,13 +81,24 @@ export function getCatN3MonthlyForecast(cat: string, month: string): number {
 }
 
 const _productCdTotals: Record<string, number> = {};
+// O(1) lookup: product by codigo|cd
+const _productByCodCd = new Map<string, Product>();
+// O(1) lookup: products by codigo
+const _productsByCodigo = new Map<number, Product[]>();
+
 for (const p of allProducts) {
     const key = `${p.categoria4}|${p.cd}`;
     _productCdTotals[key] = (_productCdTotals[key] || 0) + p.originalForecast;
+
+    _productByCodCd.set(`${p.codigo}|${p.cd}`, p);
+
+    const existing = _productsByCodigo.get(p.codigo);
+    if (existing) existing.push(p);
+    else _productsByCodigo.set(p.codigo, [p]);
 }
 
 export function getProductMonthlyForecast(codigo: number, cd: string, month: string): number {
-    const product = allProducts.find(p => p.codigo === codigo && p.cd === cd);
+    const product = _productByCodCd.get(`${codigo}|${cd}`);
     if (!product) return 0;
     const cdForecast = catN4CdMonthlyForecast[product.categoria4]?.[cd]?.[month] || 0;
     const totalKey = `${product.categoria4}|${cd}`;
@@ -97,7 +108,7 @@ export function getProductMonthlyForecast(codigo: number, cd: string, month: str
 }
 
 export function getProductMonthlyForecastAllCds(codigo: number, month: string): number {
-    const products = allProducts.filter(p => p.codigo === codigo);
+    const products = _productsByCodigo.get(codigo) || [];
     let total = 0;
     for (const p of products) {
         total += getProductMonthlyForecast(p.codigo, p.cd, month);

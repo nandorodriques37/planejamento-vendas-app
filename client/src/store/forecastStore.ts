@@ -10,6 +10,10 @@ import {
     computeDerivedState, ALL_FORECAST_MONTHS
 } from "./forecastEngine";
 import ForecastWorker from './forecastWorker?worker';
+import { persistAdjustments } from "@/services/adjustmentService";
+import {
+    loadAdjustments as loadAdjustmentsFromService
+} from "@/services/adjustmentService";
 
 export type { SavedAdjustment, AdjustmentLevel, AdjustmentType };
 
@@ -22,11 +26,11 @@ export interface MonthlyDataPoint {
 }
 
 
-const STORAGE_KEY = "previsao-vendas-ajustes";
-
-function loadAdjustments(): SavedAdjustment[] {
+// Load adjustments synchronously for initial state (localStorage is sync)
+// When migrating to API, this will need to become async with a loading state
+function loadAdjustmentsSync(): SavedAdjustment[] {
     try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const stored = localStorage.getItem("previsao-vendas-ajustes");
         if (stored) {
             const parsed = JSON.parse(stored);
             return parsed.map((adj: any) => {
@@ -68,7 +72,7 @@ interface ForecastStoreType {
     getMonthlyAdjustmentRatio: (catN4: string, cd: string, month: string) => number;
 }
 
-const initialAdjustments = loadAdjustments();
+const initialAdjustments = loadAdjustmentsSync();
 const initialState = computeDerivedState(initialAdjustments);
 
 const worker = new ForecastWorker();
@@ -92,14 +96,14 @@ export const useForecastStore = create<ForecastStoreType>()((set, get) => {
             set((state) => {
                 const withExportFlag = newAdjustments.map(adj => ({ ...adj, exported: false, exportedAt: null }));
                 const nextAdjustments = [...state.savedAdjustments, ...withExportFlag];
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAdjustments));
+                persistAdjustments(nextAdjustments);
                 worker.postMessage({ savedAdjustments: nextAdjustments });
                 return { savedAdjustments: nextAdjustments, isCalculating: true };
             });
         },
 
         clearAdjustments: () => {
-            localStorage.removeItem(STORAGE_KEY);
+            persistAdjustments([]);
             worker.postMessage({ savedAdjustments: [] });
             set({ savedAdjustments: [], isCalculating: true });
         },
@@ -107,7 +111,7 @@ export const useForecastStore = create<ForecastStoreType>()((set, get) => {
         revertAdjustment: (id) => {
             set((state) => {
                 const nextAdjustments = state.savedAdjustments.filter(adj => adj.id !== id);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAdjustments));
+                persistAdjustments(nextAdjustments);
                 worker.postMessage({ savedAdjustments: nextAdjustments });
                 return { savedAdjustments: nextAdjustments, isCalculating: true };
             });
@@ -119,7 +123,7 @@ export const useForecastStore = create<ForecastStoreType>()((set, get) => {
                 const nextAdjustments = state.savedAdjustments.map(adj =>
                     ids.includes(adj.id) ? { ...adj, exported: true, exportedAt: now } : adj
                 );
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAdjustments));
+                persistAdjustments(nextAdjustments);
                 worker.postMessage({ savedAdjustments: nextAdjustments });
                 return { savedAdjustments: nextAdjustments, isCalculating: true };
             });

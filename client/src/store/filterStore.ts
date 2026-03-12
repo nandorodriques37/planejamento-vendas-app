@@ -113,6 +113,9 @@ export const useFilterStore = create<FilterStoreType>()((set, get) => {
     };
 });
 
+// Debounce sync to avoid redundant worker calls during batch operations
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
+
 useForecastStore.subscribe((state, prevState) => {
     const currProducts = state.adjustedProducts;
     const prevProducts = prevState.adjustedProducts;
@@ -122,10 +125,14 @@ useForecastStore.subscribe((state, prevState) => {
     const prevMap = prevState.monthlyAdjustmentMap;
 
     if (currProducts !== prevProducts || currHasAdj !== prevHasAdj || currMap !== prevMap) {
-        useFilterStore.getState().syncWithForecast(
-            state.adjustedProducts,
-            state.hasAdjustments,
-            state.monthlyAdjustmentMap
-        );
+        if (_syncTimer) clearTimeout(_syncTimer);
+        _syncTimer = setTimeout(() => {
+            useFilterStore.getState().syncWithForecast(
+                state.adjustedProducts,
+                state.hasAdjustments,
+                state.monthlyAdjustmentMap
+            );
+            _syncTimer = null;
+        }, 100);
     }
 });
