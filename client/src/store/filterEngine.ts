@@ -1,8 +1,10 @@
-import { type Product } from "@/lib/mockData";
-import { comparisonData, monthlyData, type ComparisonRow } from "@/lib/dataDerived";
-import { catN4CdMonthlyForecast, catN4CdMonthlyHistorico, catN4CdMonthlyQtdBruta } from "@/lib/mockData";
+import {
+    comparisonData, monthlyData,
+    catN4CdMonthlyForecast, catN4CdMonthlyHistorico, catN4CdMonthlyQtdBruta,
+    DATA_BOUNDARIES,
+} from "@/services/dataProvider";
+import type { Product, ComparisonRow } from "@/types/domain";
 import { monthYearToNumeric } from "@/lib/dateUtils";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
 import { type FilterState, type FilteredMonthlyPoint } from "./filterStore";
 
 const historicalMonths = DATA_BOUNDARIES.historicalMonths;

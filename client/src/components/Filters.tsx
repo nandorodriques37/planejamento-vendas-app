@@ -8,7 +8,7 @@
 */
 import { useState } from "react";
 import { ChevronDown, Filter, RotateCcw, Search } from "lucide-react";
-import { categoriesNivel3, categoriesNivel4, centrosDistribuicao, compradores, fornecedores } from "@/lib/mockData";
+import { categoriesNivel3, categoriesNivel4, centrosDistribuicao, compradores, fornecedores } from "@/services/dataProvider";
 import { useFilters } from "@/contexts/FilterContext";
 import { useShallow } from "zustand/react/shallow";
 import MultiSelectCombobox from "./MultiSelectCombobox";
@@ -41,15 +41,15 @@ export default function Filters() {
         className="flex items-center justify-between w-full px-5 py-3"
       >
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#0F4C75]" />
+          <Filter className="w-4 h-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">Filtros</span>
           {isFiltered && (
-            <span className="text-[10px] font-bold text-white bg-[#0F4C75] px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-white bg-primary px-2 py-0.5 rounded-full">
               ATIVO
             </span>
           )}
           {activeCount > 0 && !isFiltered && (
-            <span className="text-[10px] font-bold text-[#0F4C75] bg-[#0F4C75]/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               {activeCount} pendente{activeCount > 1 ? "s" : ""}
             </span>
           )}
@@ -77,7 +77,7 @@ export default function Filters() {
                   value={filters.codigoProduto}
                   onChange={(e) => setFilter("codigoProduto", e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") applyFilters(); }}
-                  className="w-full min-w-[160px] h-9 pl-9 pr-3 text-sm bg-white border border-border rounded-lg hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20 outline-none transition-all"
+                  className="w-full min-w-[160px] h-9 pl-9 pr-3 text-sm bg-white border border-border rounded-lg hover:border-primary/30 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function Filters() {
             <div className="flex items-end gap-2 ml-auto">
               <button
                 onClick={applyFilters}
-                className="h-9 px-4 text-sm font-semibold text-white bg-[#0F4C75] rounded-lg hover:bg-[#0F4C75]/90 transition-colors flex items-center gap-2"
+                className="h-9 px-4 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
               >
                 <Search className="w-3.5 h-3.5" />
                 Aplicar

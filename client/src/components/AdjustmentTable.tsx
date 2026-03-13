@@ -9,7 +9,8 @@
   - Bloqueio de duplicatas
   - Controle de exportação para evitar duplicidade no datalake
 */
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { Plus, Trash2, Save, ChevronDown, AlertCircle, Sliders, GitBranch, Package, Download, Search, X } from "lucide-react";
 import {
   Dialog,
@@ -20,11 +21,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { categoriesNivel3, categoriesNivel4, sampleProducts } from "@/lib/mockData";
+import { categoriesNivel3, categoriesNivel4, sampleProducts } from "@/services/dataProvider";
 import { useForecast, type AdjustmentLevel, type AdjustmentType, type SavedAdjustment } from "@/contexts/ForecastContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useShallow } from "zustand/react/shallow";
 import { DEFAULT_USER } from "@/lib/constants";
+import { calculateMonthlyAdjusted } from "@/lib/forecastUtils";
 import { toast } from "sonner";
 
 interface AdjustmentRow {
@@ -47,13 +49,6 @@ function getItemOptions(level: AdjustmentLevel): string[] {
     default:
       return [];
   }
-}
-
-function calculateMonthlyAdjusted(original: number, type: AdjustmentType, value: number): number {
-  if (type === "%") {
-    return Math.round(original * (1 + value / 100));
-  }
-  return original + value;
 }
 
 export default function AdjustmentTable() {
@@ -80,15 +75,7 @@ export default function AdjustmentTable() {
   const usedItems = useMemo(() => new Set(rows.map(r => r.item)), [rows]);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (tableRef.current && !tableRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(tableRef, useCallback(() => setOpenDropdown(null), []));
 
   const addRow = useCallback(() => {
     const monthlyValues: Record<string, number | string> = {};
@@ -354,7 +341,7 @@ export default function AdjustmentTable() {
           )}
           <button
             onClick={addRow}
-            className="h-8 px-3 text-xs font-semibold text-[#0F4C75] border border-[#0F4C75]/30 rounded-lg hover:bg-[#0F4C75]/5 transition-colors flex items-center gap-1.5"
+            className="h-8 px-3 text-xs font-semibold text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
             Adicionar Linha
@@ -370,7 +357,7 @@ export default function AdjustmentTable() {
             <button
               onClick={handleExport}
               className={`h-8 px-4 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${pendingExportCount > 0
-                  ? "text-white bg-[#0F4C75] hover:bg-[#0F4C75]/90 shadow-sm"
+                  ? "text-white bg-primary hover:bg-primary/90 shadow-sm"
                   : "text-muted-foreground bg-muted border border-border cursor-default"
                 }`}
             >
@@ -414,7 +401,7 @@ export default function AdjustmentTable() {
                 {/* Monthly columns */}
                 {activeMonths.map(month => (
                   <th key={month} className="px-1.5 py-2.5 text-center min-w-[72px]">
-                    <span className="text-[10px] font-bold text-[#0F4C75] uppercase tracking-wider">{month}</span>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{month}</span>
                   </th>
                 ))}
                 <th className="px-2 py-2.5 text-right min-w-[100px]">
@@ -439,15 +426,15 @@ export default function AdjustmentTable() {
                 const redistribInfo = getRedistribInfo(row);
 
                 return (
-                  <tr key={row.id} className="border-b border-border/50 hover:bg-[#0F4C75]/[0.02] transition-colors group">
-                    <td className="px-2 py-2 text-muted-foreground font-semibold sticky left-0 bg-white group-hover:bg-[#0F4C75]/[0.02] z-10">{idx + 1}</td>
+                  <tr key={row.id} className="border-b border-border/50 hover:bg-primary/[0.02] transition-colors group">
+                    <td className="px-2 py-2 text-muted-foreground font-semibold sticky left-0 bg-white group-hover:bg-primary/[0.02] z-10">{idx + 1}</td>
 
                     {/* Level selector */}
                     <td className="px-2 py-2">
                       <div className="relative">
                         <button
                           onClick={() => setOpenDropdown(openDropdown === `level-${row.id}` ? null : `level-${row.id}`)}
-                          className="flex items-center justify-between w-full h-7 px-2 text-[11px] bg-white border border-border rounded-lg hover:border-[#0F4C75]/30 transition-colors"
+                          className="flex items-center justify-between w-full h-7 px-2 text-[11px] bg-white border border-border rounded-lg hover:border-primary/30 transition-colors"
                         >
                           <div className="flex items-center gap-1">
                             {row.level === "PRODUTO" ? (
@@ -465,7 +452,7 @@ export default function AdjustmentTable() {
                               <button
                                 key={level}
                                 onClick={() => { updateRow(row.id, "level", level); setOpenDropdown(null); }}
-                                className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 ${row.level === level ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                                className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors flex items-center gap-2 ${row.level === level ? "bg-primary/5 text-primary font-semibold" : ""
                                   }`}
                               >
                                 {level === "PRODUTO" ? (
@@ -524,7 +511,7 @@ export default function AdjustmentTable() {
                                     value={itemSearchTerms[row.id] || ""}
                                     onChange={(e) => setItemSearchTerms(prev => ({ ...prev, [row.id]: e.target.value }))}
                                     autoFocus
-                                    className="w-full h-7 pl-7 pr-2 text-xs border border-border rounded-md focus:outline-none focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
+                                    className="w-full h-7 pl-7 pr-2 text-xs border border-border rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                                   />
                                 </div>
                                 <div className="text-[9px] text-muted-foreground mt-1 px-0.5">
@@ -553,7 +540,7 @@ export default function AdjustmentTable() {
                                           setOpenDropdown(null);
                                           setItemSearchTerms(prev => ({ ...prev, [row.id]: "" }));
                                         }}
-                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${row.item === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                                        className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${row.item === opt ? "bg-primary/5 text-primary font-semibold" : ""
                                           }`}
                                       >
                                         {searchTerm && idx >= 0 ? (
@@ -582,7 +569,7 @@ export default function AdjustmentTable() {
                         <button
                           onClick={() => updateRow(row.id, "type", "%")}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "%"
-                              ? "bg-white text-[#0F4C75] shadow-sm"
+                              ? "bg-white text-primary shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
@@ -591,7 +578,7 @@ export default function AdjustmentTable() {
                         <button
                           onClick={() => updateRow(row.id, "type", "QTD")}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-all ${row.type === "QTD"
-                              ? "bg-white text-[#0F4C75] shadow-sm"
+                              ? "bg-white text-primary shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
@@ -619,8 +606,8 @@ export default function AdjustmentTable() {
                               className={`w-full h-7 px-1.5 text-[11px] text-center font-semibold tabular-nums border rounded-lg outline-none transition-all ${!row.item
                                   ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
                                   : hasValue
-                                    ? "border-[#0F4C75]/30 bg-[#0F4C75]/5 text-[#0F4C75] focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
-                                    : "border-border hover:border-[#0F4C75]/30 focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
+                                    ? "border-primary/30 bg-primary/5 text-primary focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                    : "border-border hover:border-primary/30 focus:border-primary focus:ring-1 focus:ring-primary/20"
                                 }`}
                             />
                             {row.item && (
@@ -667,7 +654,7 @@ export default function AdjustmentTable() {
                               }
                             }}
                             title="Aplicar valor do 1º mês a todos"
-                            className="p-1 rounded-lg text-muted-foreground hover:text-[#0F4C75] hover:bg-[#0F4C75]/5 transition-colors"
+                            className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -708,7 +695,7 @@ export default function AdjustmentTable() {
           </div>
           <button
             onClick={addRow}
-            className="text-xs font-medium text-[#0F4C75] hover:underline flex items-center gap-1"
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
           >
             <Plus className="w-3 h-3" />
             Adicionar mais uma linha
@@ -770,7 +757,7 @@ export default function AdjustmentTable() {
             <Button variant="outline" onClick={cancelSave}>
               Cancelar
             </Button>
-            <Button onClick={confirmSave} className="bg-[#0F4C75] hover:bg-[#0F4C75]/90">
+            <Button onClick={confirmSave} className="bg-primary hover:bg-primary/90">
               <Save className="w-4 h-4 mr-2" />
               Confirmar e Salvar
             </Button>

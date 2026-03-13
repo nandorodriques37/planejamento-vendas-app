@@ -9,7 +9,7 @@
   Meses disponíveis: detectados dinamicamente de dataBoundaries
 */
 import { createContext, useContext, useState, useMemo, useCallback, type ReactNode } from "react";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { DATA_BOUNDARIES } from "@/services/dataProvider";
 
 // All available forecast months — detected dynamically from data
 const ALL_FORECAST_MONTHS = DATA_BOUNDARIES.forecastMonths;

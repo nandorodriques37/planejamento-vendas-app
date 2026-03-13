@@ -6,7 +6,8 @@
   - Dois dropdowns para selecionar mês início e mês fim
   - Atualiza o PeriodContext que controla as colunas da tabela de ajustes
 */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { BarChart3, Bell, User, Calendar, ChevronDown } from "lucide-react";
 import { DEFAULT_USER } from "@/lib/constants";
 import { usePeriod } from "@/contexts/PeriodContext";
@@ -30,15 +31,7 @@ export default function Header() {
   const { user, logout } = useAuthStore();
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, useCallback(() => setOpenDropdown(null), []));
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur-md">
@@ -46,11 +39,11 @@ export default function Header() {
         {/* Logo & Title */}
         <Link href="/">
           <a className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0F4C75] text-white">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-white">
               <BarChart3 className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-[#0F4C75] leading-tight tracking-tight">
+              <h1 className="text-base font-bold text-primary leading-tight tracking-tight">
                 Previsão de Vendas
               </h1>
               <p className="text-[11px] text-muted-foreground font-medium leading-tight">
@@ -64,14 +57,14 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {/* Period selector */}
           <div ref={dropdownRef} className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#0F4C75]" />
+            <Calendar className="w-4 h-4 text-primary" />
             <span className="text-xs text-muted-foreground font-medium">Período:</span>
 
             {/* Start month dropdown */}
             <div className="relative">
               <button
                 onClick={() => setOpenDropdown(openDropdown === "start" ? null : "start")}
-                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-[#0F4C75] bg-[#0F4C75]/5 border border-[#0F4C75]/20 rounded-lg hover:bg-[#0F4C75]/10 transition-colors"
+                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-primary bg-primary/5 border border-primary/20 rounded-lg hover:bg-primary/10 transition-colors"
               >
                 {startMonth}
                 <ChevronDown className="w-3 h-3" />
@@ -82,7 +75,7 @@ export default function Header() {
                     <button
                       key={opt.value}
                       onClick={() => { setStartMonth(opt.value); setOpenDropdown(null); }}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${opt.value === startMonth ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${opt.value === startMonth ? "bg-primary/5 text-primary font-semibold" : ""
                         }`}
                     >
                       {opt.label}
@@ -98,7 +91,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setOpenDropdown(openDropdown === "end" ? null : "end")}
-                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-[#0F4C75] bg-[#0F4C75]/5 border border-[#0F4C75]/20 rounded-lg hover:bg-[#0F4C75]/10 transition-colors"
+                className="flex items-center gap-1 h-7 px-2.5 text-xs font-semibold text-primary bg-primary/5 border border-primary/20 rounded-lg hover:bg-primary/10 transition-colors"
               >
                 {endMonth}
                 <ChevronDown className="w-3 h-3" />
@@ -109,7 +102,7 @@ export default function Header() {
                     <button
                       key={opt.value}
                       onClick={() => { setEndMonth(opt.value); setOpenDropdown(null); }}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${opt.value === endMonth ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors ${opt.value === endMonth ? "bg-primary/5 text-primary font-semibold" : ""
                         }`}
                     >
                       {opt.label}
@@ -133,8 +126,8 @@ export default function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer hover:bg-black/5 p-1 px-2 rounded-md transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-[#0F4C75]/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-[#0F4C75]" />
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
                   </div>
                   <div className="hidden md:block">
                     <p className="text-sm font-semibold leading-tight capitalize">{user?.name || "Usuário"}</p>
@@ -154,7 +147,7 @@ export default function Header() {
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/admin">
-                      <DropdownMenuItem className="cursor-pointer text-[#0F4C75] font-medium">
+                      <DropdownMenuItem className="cursor-pointer text-primary font-medium">
                         Painel Admin
                       </DropdownMenuItem>
                     </Link>

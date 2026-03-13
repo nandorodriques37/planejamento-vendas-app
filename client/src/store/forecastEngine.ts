@@ -1,22 +1,8 @@
-import { allProducts, catN4CdMonthlyForecast, type Product } from "@/lib/mockData";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { allProducts, catN4CdMonthlyForecast, DATA_BOUNDARIES } from "@/services/dataProvider";
+import type { Product } from "@/types/domain";
 
-export type AdjustmentLevel = "CATEGORIA NÍVEL 3" | "CATEGORIA NÍVEL 4" | "PRODUTO";
-export type AdjustmentType = "%" | "QTD";
-
-export interface SavedAdjustment {
-    id: string;
-    level: AdjustmentLevel;
-    item: string;
-    type: AdjustmentType;
-    monthlyValues: Record<string, number>;
-    previsaoOriginal: number;
-    previsaoAjustada: number;
-    timestamp: string;
-    usuario: string;
-    exported: boolean;
-    exportedAt: string | null;
-}
+export type { AdjustmentLevel, AdjustmentType, SavedAdjustment } from "@/types/domain";
+import type { AdjustmentLevel, SavedAdjustment } from "@/types/domain";
 
 export const catN3toN4: Record<string, string[]> = (() => {
     const map: Record<string, Set<string>> = {};

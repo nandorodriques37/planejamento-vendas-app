@@ -79,11 +79,11 @@ export default function KpiCards() {
           <div className="flex items-start justify-between mb-3">
             <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${kpi.label === "Ajustes Realizados" && hasAdjustments
                 ? "bg-emerald-100"
-                : "bg-[#0F4C75]/8"
+                : "bg-primary/8"
               }`}>
               <kpi.icon className={`w-4.5 h-4.5 ${kpi.label === "Ajustes Realizados" && hasAdjustments
                   ? "text-emerald-700"
-                  : "text-[#0F4C75]"
+                  : "text-primary"
                 }`} />
             </div>
             {kpi.variation && (

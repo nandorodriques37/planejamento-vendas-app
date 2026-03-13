@@ -17,9 +17,9 @@ import { createPortal } from "react-dom";
 import { useFilters } from "@/contexts/FilterContext";
 import { useForecast, type SavedAdjustment } from "@/contexts/ForecastContext";
 import { useShallow } from "zustand/react/shallow";
-import { catN4CdMonthlyHistorico } from "@/lib/mockData";
-import { comparisonData } from "@/lib/dataDerived";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { catN4CdMonthlyHistorico } from "@/services/dataProvider";
+import { comparisonData } from "@/services/dataProvider";
+import { DATA_BOUNDARIES } from "@/services/dataProvider";
 import { MONTHS_PT_NUMBER } from "@/lib/constants";
 import { DEFAULT_USER } from "@/lib/constants";
 
@@ -538,10 +538,10 @@ function ConfirmationModal({
             {/* SKUs affected */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Package className="w-3.5 h-3.5 text-[#0F4C75]" />
+                <Package className="w-3.5 h-3.5 text-primary" />
                 <span className="text-xs text-foreground">SKUs afetados</span>
               </div>
-              <span className="text-xs font-bold text-[#0F4C75] tabular-nums">
+              <span className="text-xs font-bold text-primary tabular-nums">
                 {pending.skuCount} produto{pending.skuCount > 1 ? "s" : ""}
               </span>
             </div>
@@ -670,7 +670,7 @@ const EditableQtdCell = memo(function EditableQtdCell({ value, originalValue, is
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={doConfirm}
-            className="w-full min-w-[70px] text-xs text-right font-semibold tabular-nums px-2 py-1 border border-[#0F4C75] rounded bg-[#0F4C75]/5 focus:ring-2 focus:ring-[#0F4C75]/30 outline-none"
+            className="w-full min-w-[70px] text-xs text-right font-semibold tabular-nums px-2 py-1 border border-primary rounded bg-primary/5 focus:ring-2 focus:ring-primary/30 outline-none"
           />
         </div>
       </td>
@@ -684,7 +684,7 @@ const EditableQtdCell = memo(function EditableQtdCell({ value, originalValue, is
   return (
     <td
       onClick={handleStartEdit}
-      className={`px-2 py-2 text-right font-semibold tabular-nums border-l border-border/50 cursor-pointer group relative transition-colors hover:bg-[#0F4C75]/[0.04] ${className} ${isEdited ? "bg-emerald-50/50" : ""
+      className={`px-2 py-2 text-right font-semibold tabular-nums border-l border-border/50 cursor-pointer group relative transition-colors hover:bg-primary/[0.04] ${className} ${isEdited ? "bg-emerald-50/50" : ""
         }`}
       title={isEdited
         ? `Original: ${formatVal(originalValue)} · Ajustado: ${formatVal(value)} (${deltaPercent > 0 ? "+" : ""}${deltaPercent.toFixed(1)}%)\nClique para editar`
@@ -731,8 +731,8 @@ const ComparisonTableRow = memo(function ComparisonTableRow({
       className={`border-b border-border/50 transition-colors ${isEdited
         ? "bg-emerald-50/30 hover:bg-emerald-50/50"
         : idx % 2 === 0
-          ? "bg-white hover:bg-[#0F4C75]/[0.02]"
-          : "bg-[#F8FAFC]/50 hover:bg-[#0F4C75]/[0.02]"
+          ? "bg-white hover:bg-primary/[0.02]"
+          : "bg-[#F8FAFC]/50 hover:bg-primary/[0.02]"
         }`}
     >
       <td className={`sticky left-0 z-10 px-3 py-2 font-semibold text-foreground whitespace-nowrap text-xs ${isEdited ? "bg-emerald-50/30" : idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]/50"
@@ -795,7 +795,7 @@ const ComparisonTableRow = memo(function ComparisonTableRow({
           placeholder="..."
           value={comment}
           onChange={(e) => onCommentChange(row.categoria, e.target.value)}
-          className="w-full min-w-[100px] text-xs px-2 py-1 border-0 bg-transparent hover:bg-accent focus:bg-white focus:ring-1 focus:ring-[#0F4C75]/20 rounded outline-none transition-all"
+          className="w-full min-w-[100px] text-xs px-2 py-1 border-0 bg-transparent hover:bg-accent focus:bg-white focus:ring-1 focus:ring-primary/20 rounded outline-none transition-all"
         />
       </td>
     </tr>
@@ -1021,14 +1021,14 @@ export default function ComparisonTable() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0F4C75]/10">
-            <Table2 className="w-4 h-4 text-[#0F4C75]" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+            <Table2 className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-foreground">Comparativo Mensal e Trimestral</h2>
             <p className="text-[11px] text-muted-foreground">
               Análise por Categoria Nível 4 · {adjustedComparison.length} categorias
-              {isFiltered && <span className="text-[#0F4C75] font-semibold ml-1">(filtrado)</span>}
+              {isFiltered && <span className="text-primary font-semibold ml-1">(filtrado)</span>}
               {hasCdFilter && <span className="text-amber-600 font-semibold ml-1">· Dados agregados (todos os CDs) — granularidade por CD disponível na versão conectada ao Datalake</span>}
             </p>
           </div>
@@ -1075,8 +1075,8 @@ export default function ComparisonTable() {
 
       {/* Instruction banner */}
       <div className="px-5 py-2 bg-blue-50/60 border-b border-blue-100 flex items-center gap-2">
-        <Pencil className="w-3.5 h-3.5 text-[#0F4C75]/60 flex-shrink-0" />
-        <p className="text-[11px] text-[#0F4C75]/80">
+        <Pencil className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+        <p className="text-[11px] text-primary/80">
           <span className="font-semibold">Edição inline:</span> Clique nos valores de <span className="font-semibold">Qtd</span> dos meses para ajustar. Um resumo do impacto será exibido para confirmação antes de salvar.
         </p>
       </div>
@@ -1093,14 +1093,14 @@ export default function ComparisonTable() {
                 <th className="sticky left-0 z-30 bg-[#F8FAFC] px-3 py-2" rowSpan={2}>
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Cat. Nível 4</span>
                 </th>
-                <th colSpan={3} className="px-2 py-1.5 text-center bg-[#0F4C75]/5 border-l border-border">
-                  <span className="text-[10px] font-bold text-[#0F4C75] uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[0]]}</span>
+                <th colSpan={3} className="px-2 py-1.5 text-center bg-primary/5 border-l border-border">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[0]]}</span>
                 </th>
-                <th colSpan={2} className="px-2 py-1.5 text-center bg-[#0F4C75]/5 border-l border-border">
-                  <span className="text-[10px] font-bold text-[#0F4C75] uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[1]]}</span>
+                <th colSpan={2} className="px-2 py-1.5 text-center bg-primary/5 border-l border-border">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[1]]}</span>
                 </th>
-                <th colSpan={2} className="px-2 py-1.5 text-center bg-[#0F4C75]/5 border-l border-border">
-                  <span className="text-[10px] font-bold text-[#0F4C75] uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[2]]}</span>
+                <th colSpan={2} className="px-2 py-1.5 text-center bg-primary/5 border-l border-border">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[2]]}</span>
                 </th>
                 <th colSpan={7} className="px-2 py-1.5 text-center bg-amber-50 border-l border-border">
                   <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Trimestre</span>
@@ -1115,20 +1115,20 @@ export default function ComparisonTable() {
               <tr className="border-b-2 border-border bg-[#F8FAFC]">
                 <th className="px-2 py-1.5 text-right border-l border-border bg-[#F8FAFC]">
                   <span className="text-[10px] font-semibold text-muted-foreground flex items-center justify-end gap-1">
-                    Qtd <Pencil className="w-2.5 h-2.5 text-[#0F4C75]/40" />
+                    Qtd <Pencil className="w-2.5 h-2.5 text-primary/40" />
                   </span>
                 </th>
                 <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LY</span></th>
                 <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LM</span></th>
                 <th className="px-2 py-1.5 text-right border-l border-border bg-[#F8FAFC]">
                   <span className="text-[10px] font-semibold text-muted-foreground flex items-center justify-end gap-1">
-                    Qtd <Pencil className="w-2.5 h-2.5 text-[#0F4C75]/40" />
+                    Qtd <Pencil className="w-2.5 h-2.5 text-primary/40" />
                   </span>
                 </th>
                 <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LY</span></th>
                 <th className="px-2 py-1.5 text-right border-l border-border bg-[#F8FAFC]">
                   <span className="text-[10px] font-semibold text-muted-foreground flex items-center justify-end gap-1">
-                    Qtd <Pencil className="w-2.5 h-2.5 text-[#0F4C75]/40" />
+                    Qtd <Pencil className="w-2.5 h-2.5 text-primary/40" />
                   </span>
                 </th>
                 <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LY</span></th>

@@ -1,6 +1,6 @@
 import { computeDerivedState } from "./filterEngine";
 import type { FilterState } from "./filterStore";
-import type { Product } from "@/lib/mockData";
+import type { Product } from "@/types/domain";
 
 self.onmessage = (e: MessageEvent<{
     appliedFilters: FilterState,

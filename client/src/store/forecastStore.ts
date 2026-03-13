@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { allProducts, catN4CdMonthlyForecast, type Product } from "@/lib/mockData";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { allProducts, catN4CdMonthlyForecast, DATA_BOUNDARIES } from "@/services/dataProvider";
+import type { Product } from "@/types/domain";
 
 import {
     type SavedAdjustment, type AdjustmentLevel, type AdjustmentType,
@@ -84,6 +84,11 @@ export const useForecastStore = create<ForecastStoreType>()((set, get) => {
             isCalculating: false,
             ...e.data
         });
+    };
+
+    worker.onerror = (e) => {
+        console.error("[ForecastWorker] Error:", e.message);
+        set({ isCalculating: false });
     };
 
     return {

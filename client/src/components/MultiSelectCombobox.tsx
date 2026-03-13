@@ -10,7 +10,8 @@
   - Botão "Selecionar Todos" / "Limpar Todos"
   - Destaque do texto digitado em amarelo
 */
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { ChevronDown, Search, X, Check } from "lucide-react";
 
 interface MultiSelectComboboxProps {
@@ -53,16 +54,7 @@ export default function MultiSelectCombobox({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Close on click outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setSearch("");
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(ref, useCallback(() => { setOpen(false); setSearch(""); }, []));
 
   // Focus input when dropdown opens
   useEffect(() => {
@@ -152,10 +144,10 @@ export default function MultiSelectCombobox({
         onClick={() => setOpen(!open)}
         className={`flex items-center justify-between w-full min-w-[180px] h-9 px-3 text-sm bg-white border rounded-lg transition-colors ${
           open
-            ? "border-[#0F4C75] ring-1 ring-[#0F4C75]/20"
+            ? "border-primary ring-1 ring-primary/20"
             : values.length > 0
-              ? "border-[#0F4C75]/40 bg-[#0F4C75]/[0.02]"
-              : "border-border hover:border-[#0F4C75]/30"
+              ? "border-primary/40 bg-primary/[0.02]"
+              : "border-border hover:border-primary/30"
         }`}
       >
         <span className={`truncate ${values.length > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
@@ -164,7 +156,7 @@ export default function MultiSelectCombobox({
         <div className="flex items-center gap-1 ml-2 flex-shrink-0">
           {values.length > 0 && (
             <>
-              <span className="text-[10px] font-bold text-white bg-[#0F4C75] px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+              <span className="text-[10px] font-bold text-white bg-primary px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
                 {values.length}
               </span>
               <span
@@ -187,12 +179,12 @@ export default function MultiSelectCombobox({
           {values.map(val => (
             <span
               key={val}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#0F4C75]/10 text-[#0F4C75] text-[10px] font-semibold max-w-[160px]"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-semibold max-w-[160px]"
             >
               <span className="truncate">{val}</span>
               <button
                 onClick={(e) => removeValue(val, e)}
-                className="flex-shrink-0 p-0.5 rounded hover:bg-[#0F4C75]/20 transition-colors"
+                className="flex-shrink-0 p-0.5 rounded hover:bg-primary/20 transition-colors"
               >
                 <X className="w-2.5 h-2.5" />
               </button>
@@ -215,7 +207,7 @@ export default function MultiSelectCombobox({
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Buscar..."
-                className="w-full h-8 pl-8 pr-3 text-sm bg-accent/50 border border-border rounded-md focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20 outline-none transition-all placeholder:text-muted-foreground/60"
+                className="w-full h-8 pl-8 pr-3 text-sm bg-accent/50 border border-border rounded-md focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/60"
               />
             </div>
             <div className="flex items-center justify-between mt-1.5 px-1">
@@ -227,7 +219,7 @@ export default function MultiSelectCombobox({
               </p>
               <button
                 onClick={allFilteredSelected ? handleDeselectAllFiltered : handleSelectAllFiltered}
-                className="text-[10px] font-semibold text-[#0F4C75] hover:text-[#0F4C75]/70 transition-colors"
+                className="text-[10px] font-semibold text-primary hover:text-primary/70 transition-colors"
               >
                 {allFilteredSelected ? "Desmarcar todos" : "Selecionar todos"}
               </button>
@@ -250,7 +242,7 @@ export default function MultiSelectCombobox({
                     onClick={() => toggleOption(opt)}
                     className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
                       isSelected
-                        ? "bg-[#0F4C75]/5"
+                        ? "bg-primary/5"
                         : highlightIndex === idx
                           ? "bg-accent"
                           : "text-foreground hover:bg-accent"
@@ -259,7 +251,7 @@ export default function MultiSelectCombobox({
                     {/* Checkbox visual */}
                     <span className={`w-4 h-4 flex-shrink-0 flex items-center justify-center rounded border transition-colors ${
                       isSelected
-                        ? "bg-[#0F4C75] border-[#0F4C75]"
+                        ? "bg-primary border-primary"
                         : "border-border"
                     }`}>
                       {isSelected && <Check className="w-3 h-3 text-white" />}

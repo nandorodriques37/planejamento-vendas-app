@@ -11,10 +11,10 @@ import {
   catN4CdMonthlyHistorico,
   catN4CdMonthlyQtdBruta,
   cdMonthlyData,
-  type Product,
-} from "@/lib/mockData";
-import { monthlyData, comparisonData, type ComparisonRow } from "@/lib/dataDerived";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+  monthlyData,
+  comparisonData,
+  DATA_BOUNDARIES,
+} from "@/services/dataProvider";
 import type {
   ProductsResponse,
   MonthlyDataResponse,

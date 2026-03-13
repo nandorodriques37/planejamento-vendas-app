@@ -10,8 +10,8 @@
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import type { FilteredMonthlyPoint } from "@/contexts/FilterContext";
-import type { Product } from "@/lib/mockData";
-import type { ComparisonRow } from "@/lib/dataDerived";
+import type { Product } from "@/types/domain";
+import type { ComparisonRow } from "@/types/domain";
 import { getExportFilename } from "@/lib/exportUtils";
 
 interface ExportExcelParams {

@@ -5,10 +5,8 @@
  * Quando a migração para API acontecer, estes tipos garantem
  * consistência entre cliente e servidor.
  */
-import type { Product } from "@/lib/mockData";
-import type { SavedAdjustment, AdjustmentLevel, AdjustmentType } from "@/store/forecastEngine";
+import type { Product, SavedAdjustment, AdjustmentLevel, AdjustmentType, ComparisonRow } from "@/types/domain";
 import type { FilterState, FilteredMonthlyPoint } from "@/store/filterStore";
-import type { ComparisonRow } from "@/lib/dataDerived";
 
 // ============================================================
 // Products

@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import { type Product } from "@/lib/mockData";
+import { allProducts as originalProducts } from "@/services/dataProvider";
+import type { Product, ComparisonRow } from "@/types/domain";
 import { useForecastStore } from "./forecastStore";
-import { type ComparisonRow } from "@/lib/dataDerived";
-import { allProducts as originalProducts } from "@/lib/mockData";
 import { computeDerivedState } from "./filterEngine";
 import FilterWorker from "./filterWorker?worker";
 
@@ -63,6 +62,11 @@ export const useFilterStore = create<FilterStoreType>()((set, get) => {
             isCalculating: false,
             ...e.data
         });
+    };
+
+    worker.onerror = (e) => {
+        console.error("[FilterWorker] Error:", e.message);
+        set({ isCalculating: false });
     };
 
     return {

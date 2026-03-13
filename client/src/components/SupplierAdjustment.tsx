@@ -8,7 +8,8 @@
   Fluxo: Fornecedor → Nível → Item filtrado → Ajuste mês a mês
   Integra com ForecastContext para salvar e propagar ajustes
 */
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { Plus, Trash2, Save, ChevronDown, AlertCircle, Sliders, GitBranch, Package, Search, X, Truck, ArrowRight, Copy } from "lucide-react";
 import {
   Dialog,
@@ -19,12 +20,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { allProducts } from "@/lib/mockData";
+import { allProducts } from "@/services/dataProvider";
 import { useForecast, type AdjustmentLevel, type AdjustmentType, type SavedAdjustment } from "@/contexts/ForecastContext";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useShallow } from "zustand/react/shallow";
 import { useDebounce } from "use-debounce";
 import { DEFAULT_USER } from "@/lib/constants";
+import { calculateMonthlyAdjusted } from "@/lib/forecastUtils";
 import { toast } from "sonner";
 
 interface SupplierAdjustmentRow {
@@ -34,13 +36,6 @@ interface SupplierAdjustmentRow {
   item: string;
   type: AdjustmentType;
   monthlyValues: Record<string, number | string>;
-}
-
-function calculateMonthlyAdjusted(original: number, type: AdjustmentType, value: number): number {
-  if (type === "%") {
-    return Math.round(original * (1 + value / 100));
-  }
-  return original + value;
 }
 
 export default function SupplierAdjustment() {
@@ -89,15 +84,7 @@ export default function SupplierAdjustment() {
   }, [supplierData]);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (tableRef.current && !tableRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(tableRef, useCallback(() => setOpenDropdown(null), []));
 
   function getItemOptionsForSupplier(fornecedor: string, level: AdjustmentLevel): string[] {
     const data = supplierData[fornecedor];
@@ -335,7 +322,7 @@ export default function SupplierAdjustment() {
               value={inputValue}
               onChange={(e) => setSearchTerms(prev => ({ ...prev, [`${rowId}-${dropdownKey}`]: e.target.value }))}
               autoFocus
-              className="w-full h-7 pl-7 pr-2 text-xs border border-border rounded-md focus:outline-none focus:border-[#0F4C75] focus:ring-1 focus:ring-[#0F4C75]/20"
+              className="w-full h-7 pl-7 pr-2 text-xs border border-border rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
             />
           </div>
           <div className="text-[9px] text-muted-foreground mt-1 px-0.5">
@@ -362,7 +349,7 @@ export default function SupplierAdjustment() {
                     setOpenDropdown(null);
                     setSearchTerms(prev => ({ ...prev, [`${rowId}-${dropdownKey}`]: "" }));
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${currentValue === opt ? "bg-[#0F4C75]/5 text-[#0F4C75] font-semibold" : ""
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition-colors ${currentValue === opt ? "bg-primary/5 text-primary font-semibold" : ""
                     }`}
                 >
                   {searchTerm && idx >= 0 ? (

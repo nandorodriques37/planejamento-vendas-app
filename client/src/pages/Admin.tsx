@@ -76,7 +76,7 @@ export default function Admin() {
                 <Header />
                 <main className="px-6 py-6 max-w-[1440px] mx-auto space-y-6">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-[#0F4C75]">Administração de Usuários</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-primary">Administração de Usuários</h2>
                         <p className="text-muted-foreground text-sm mt-1">
                             Gerencie o acesso e permissões das contas da plataforma.
                         </p>
@@ -132,8 +132,8 @@ export default function Admin() {
                                                         </SelectItem>
                                                         <SelectItem value="admin">
                                                             <div className="flex items-center gap-2">
-                                                                <Shield className="h-4 w-4 text-[#0F4C75]" />
-                                                                <span className="font-medium text-[#0F4C75]">Admin</span>
+                                                                <Shield className="h-4 w-4 text-primary" />
+                                                                <span className="font-medium text-primary">Admin</span>
                                                             </div>
                                                         </SelectItem>
                                                     </SelectContent>
@@ -145,7 +145,7 @@ export default function Admin() {
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => handleResetPassword(u.id, u.email)}
-                                                        className="text-[#0F4C75] hover:text-[#0F4C75] hover:bg-[#0F4C75]/10"
+                                                        className="text-primary hover:text-primary hover:bg-primary/10"
                                                         title="Resetar Senha"
                                                     >
                                                         <Key className="h-4 w-4" />
@@ -192,13 +192,13 @@ export default function Admin() {
                             </CardHeader>
                             <CardContent className="flex flex-col items-center gap-4">
                                 <div className="w-full rounded-md bg-muted p-4 text-center border border-border">
-                                    <code className="text-lg font-bold tracking-wider text-[#0F4C75]">
+                                    <code className="text-lg font-bold tracking-wider text-primary">
                                         {resetModal.password}
                                     </code>
                                 </div>
                                 <Button
                                     variant="outline"
-                                    className="w-full border-primary/20 hover:bg-primary/5 text-[#0F4C75]"
+                                    className="w-full border-primary/20 hover:bg-primary/5 text-primary"
                                     onClick={copyToClipboard}
                                 >
                                     Copiar Senha
@@ -206,7 +206,7 @@ export default function Admin() {
                             </CardContent>
                             <div className="p-4 pt-0">
                                 <Button
-                                    className="w-full h-11 bg-[#0F4C75] hover:bg-[#0F4C75]/90"
+                                    className="w-full h-11 bg-primary hover:bg-primary/90"
                                     onClick={() => setResetModal(null)}
                                 >
                                     Concluir

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLocation, Link } from "wouter";
-import { useAuthStore } from "@/store/authStore";
+import * as authService from "@/services/authService";
 import {
     Card,
     CardContent,
@@ -36,8 +36,6 @@ const registerSchema = z.object({
 
 export default function Register() {
     const [, setLocation] = useLocation();
-    const { login, registerUser, users } = useAuthStore();
-
     const form = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
@@ -48,37 +46,22 @@ export default function Register() {
         },
     });
 
-    function onSubmit(values: z.infer<typeof registerSchema>) {
-        // Check if email already exists
-        if (users.some((user) => user.email === values.email)) {
-            toast.error("Este e-mail já está em uso.", {
+    async function onSubmit(values: z.infer<typeof registerSchema>) {
+        const result = await authService.register(values.name, values.email, values.password);
+
+        if (result.success) {
+            toast.success("Conta criada com sucesso!", {
+                icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+                style: {
+                    border: '1px solid #10b981',
+                }
+            });
+            setLocation("/");
+        } else {
+            toast.error(result.error, {
                 style: { border: '1px solid #ef4444' }
             });
-            return;
         }
-
-        const newUser = {
-            id: Date.now().toString(),
-            name: values.name,
-            email: values.email,
-            role: "user" as const,
-            password: values.password,
-        };
-
-        // Save to database mock
-        registerUser(newUser);
-
-        // Mock Registration: Log the user directly
-        login(newUser);
-
-        toast.success("Conta criada com sucesso!", {
-            icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-            style: {
-                border: '1px solid #10b981',
-            }
-        });
-
-        setLocation("/");
     }
 
     return (

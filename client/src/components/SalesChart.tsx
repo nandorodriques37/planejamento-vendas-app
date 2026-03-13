@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { useForecast } from "@/contexts/ForecastContext";
 import { useFilters } from "@/contexts/FilterContext";
 import { useShallow } from "zustand/react/shallow";
-import { DATA_BOUNDARIES } from "@/lib/dataBoundaries";
+import { DATA_BOUNDARIES } from "@/services/dataProvider";
 
 function formatNumber(value: number) {
   if (value >= 1000) {
@@ -86,8 +86,8 @@ export default function SalesChart() {
       {/* Chart header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0F4C75]/10">
-            <TrendingUp className="w-4 h-4 text-[#0F4C75]" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+            <TrendingUp className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-foreground">Histórico de Vendas e Previsão</h2>
@@ -99,14 +99,14 @@ export default function SalesChart() {
                 return `${fmt(first)} — ${fmt(last)}`;
               })()} · Vendas regulares agregadas (unidades)
               {isFiltered && (
-                <span className="ml-2 text-[#0F4C75] font-semibold">· Filtro: {filterDesc}</span>
+                <span className="ml-2 text-primary font-semibold">· Filtro: {filterDesc}</span>
               )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-0.5 bg-[#0F4C75] rounded-full" />
+            <div className="w-6 h-0.5 bg-primary rounded-full" />
             <span className="text-[11px] text-muted-foreground font-medium">Venda Regular</span>
           </div>
           <div className="flex items-center gap-2">
@@ -175,10 +175,10 @@ export default function SalesChart() {
             <Line
               type="monotone"
               dataKey="historico"
-              stroke="#0F4C75"
+              stroke="var(--primary)"
               strokeWidth={2.5}
               dot={false}
-              activeDot={{ r: 4, fill: "#0F4C75", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "var(--primary)", stroke: "#fff", strokeWidth: 2 }}
               connectNulls={false}
             />
             {/* Historical Qtd Bruta — solid light blue */}

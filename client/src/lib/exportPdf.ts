@@ -12,7 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import type { FilteredMonthlyPoint } from "@/contexts/FilterContext";
-import type { ComparisonRow } from "@/lib/dataDerived";
+import type { ComparisonRow } from "@/types/domain";
 import { getExportFilename } from "@/lib/exportUtils";
 
 interface ExportPdfParams {
