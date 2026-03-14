@@ -26,7 +26,7 @@ import { DEFAULT_USER } from "@/lib/constants";
 // ============================================================
 // Month mapping for inline edits — dynamic from data boundaries
 // ============================================================
-const MONTH_KEYS = DATA_BOUNDARIES.forecastMonths.slice(0, 3);
+const MONTH_KEYS = DATA_BOUNDARIES.forecastMonths.slice(0, 4);
 const MONTH_LABELS_MAP: Record<string, string> = Object.fromEntries(
   MONTH_KEYS.map((m, i) => [m, `Mês ${i} (${m})`])
 );
@@ -769,6 +769,14 @@ const ComparisonTableRow = memo(function ComparisonTableRow({
         isEdited={isEdited}
       />
       <VarCell value={row.varLY2} />
+      {/* Mês 3 — Editable */}
+      <EditableQtdCell
+        value={row.mes3}
+        originalValue={getOriginalValue(row.categoria, 3)}
+        onSave={(newVal) => onInlineEditRequest(row.categoria, MONTH_KEYS[3], newVal)}
+        isEdited={isEdited}
+      />
+      <VarCell value={row.varLY3} />
       {/* Trimestre */}
       <td className="px-2 py-2 text-right tabular-nums border-l border-border/50 bg-amber-50/30">{formatVal(row.triAnterior)}</td>
       <td className="px-2 py-2 text-right tabular-nums bg-amber-50/30">{formatVal(row.penTrimestre)}</td>
@@ -838,9 +846,10 @@ export default function ComparisonTable() {
       const ratio0 = getMonthlyAdjustmentRatio(row.categoria, "", MONTH_KEYS[0]);
       const ratio1 = getMonthlyAdjustmentRatio(row.categoria, "", MONTH_KEYS[1]);
       const ratio2 = getMonthlyAdjustmentRatio(row.categoria, "", MONTH_KEYS[2]);
+      const ratio3 = getMonthlyAdjustmentRatio(row.categoria, "", MONTH_KEYS[3]);
 
       // If no adjustment affects this category, skip
-      if (ratio0 === 1 && ratio1 === 1 && ratio2 === 1) return row;
+      if (ratio0 === 1 && ratio1 === 1 && ratio2 === 1 && ratio3 === 1) return row;
 
       const originalRow = comparisonData.find(r => r.categoria === row.categoria);
       if (!originalRow) return row;
@@ -848,6 +857,7 @@ export default function ComparisonTable() {
       const adjMes0 = Math.round((originalRow.mes0 ?? 0) * ratio0);
       const adjMes1 = Math.round((originalRow.mes1 ?? 0) * ratio1);
       const adjMes2 = Math.round((originalRow.mes2 ?? 0) * ratio2);
+      const adjMes3 = Math.round((originalRow.mes3 ?? 0) * ratio3);
 
       const triAtual = adjMes0 + adjMes1 + adjMes2;
 
@@ -857,12 +867,15 @@ export default function ComparisonTable() {
         ? originalRow.mes1 / (1 + originalRow.varLY1 / 100) : null;
       const lyMes2 = (originalRow.varLY2 !== null && originalRow.mes2)
         ? originalRow.mes2 / (1 + originalRow.varLY2 / 100) : null;
+      const lyMes3 = (originalRow.varLY3 !== null && originalRow.mes3)
+        ? originalRow.mes3 / (1 + originalRow.varLY3 / 100) : null;
       const lmMes0 = (originalRow.varLM !== null && originalRow.mes0)
         ? originalRow.mes0 / (1 + originalRow.varLM / 100) : null;
 
       const newVarLY = lyMes0 && lyMes0 > 0 ? ((adjMes0 / lyMes0) - 1) * 100 : originalRow.varLY;
       const newVarLY1 = lyMes1 && lyMes1 > 0 ? ((adjMes1 / lyMes1) - 1) * 100 : originalRow.varLY1;
       const newVarLY2 = lyMes2 && lyMes2 > 0 ? ((adjMes2 / lyMes2) - 1) * 100 : originalRow.varLY2;
+      const newVarLY3 = lyMes3 && lyMes3 > 0 ? ((adjMes3 / lyMes3) - 1) * 100 : originalRow.varLY3;
       const newVarLM = lmMes0 && lmMes0 > 0 ? ((adjMes0 / lmMes0) - 1) * 100 : originalRow.varLM;
 
       const newVarTriLY = originalRow.triAnterior && originalRow.triAnterior > 0
@@ -874,8 +887,8 @@ export default function ComparisonTable() {
 
       return {
         ...row,
-        mes0: adjMes0, mes1: adjMes1, mes2: adjMes2,
-        varLY: newVarLY, varLY1: newVarLY1, varLY2: newVarLY2, varLM: newVarLM,
+        mes0: adjMes0, mes1: adjMes1, mes2: adjMes2, mes3: adjMes3,
+        varLY: newVarLY, varLY1: newVarLY1, varLY2: newVarLY2, varLY3: newVarLY3, varLM: newVarLM,
         triAtual, varTriLY: newVarTriLY, varTriPenTri: newVarTriPenTri, varTriUltTri: newVarTriUltTri,
       };
     });
@@ -903,7 +916,8 @@ export default function ComparisonTable() {
     let originalMonthValue: number;
     if (monthKey === MONTH_KEYS[0]) originalMonthValue = originalRow.mes0 ?? 0;
     else if (monthKey === MONTH_KEYS[1]) originalMonthValue = originalRow.mes1 ?? 0;
-    else originalMonthValue = originalRow.mes2 ?? 0;
+    else if (monthKey === MONTH_KEYS[2]) originalMonthValue = originalRow.mes2 ?? 0;
+    else originalMonthValue = originalRow.mes3 ?? 0;
 
     if (originalMonthValue === 0 && newValue === 0) return;
 
@@ -926,9 +940,10 @@ export default function ComparisonTable() {
       newTriAtual = newValue + (adjustedRow?.mes1 ?? originalRow.mes1 ?? 0) + (adjustedRow?.mes2 ?? originalRow.mes2 ?? 0);
     } else if (monthKey === MONTH_KEYS[1]) {
       newTriAtual = (adjustedRow?.mes0 ?? originalRow.mes0 ?? 0) + newValue + (adjustedRow?.mes2 ?? originalRow.mes2 ?? 0);
-    } else {
+    } else if (monthKey === MONTH_KEYS[2]) {
       newTriAtual = (adjustedRow?.mes0 ?? originalRow.mes0 ?? 0) + (adjustedRow?.mes1 ?? originalRow.mes1 ?? 0) + newValue;
     }
+    // Mês 3 does not affect trimestre (only mes0+mes1+mes2)
 
     setPendingEdit({
       categoria,
@@ -988,7 +1003,8 @@ export default function ComparisonTable() {
     if (!originalRow) return null;
     if (monthIdx === 0) return originalRow.mes0;
     if (monthIdx === 1) return originalRow.mes1;
-    return originalRow.mes2;
+    if (monthIdx === 2) return originalRow.mes2;
+    return originalRow.mes3;
   }, []);
 
   // Set up virtualization
@@ -1102,6 +1118,9 @@ export default function ComparisonTable() {
                 <th colSpan={2} className="px-2 py-1.5 text-center bg-primary/5 border-l border-border">
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[2]]}</span>
                 </th>
+                <th colSpan={2} className="px-2 py-1.5 text-center bg-primary/5 border-l border-border">
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{MONTH_LABELS_MAP[MONTH_KEYS[3]]}</span>
+                </th>
                 <th colSpan={7} className="px-2 py-1.5 text-center bg-amber-50 border-l border-border">
                   <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Trimestre</span>
                 </th>
@@ -1132,6 +1151,12 @@ export default function ComparisonTable() {
                   </span>
                 </th>
                 <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LY</span></th>
+                <th className="px-2 py-1.5 text-right border-l border-border bg-[#F8FAFC]">
+                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center justify-end gap-1">
+                    Qtd <Pencil className="w-2.5 h-2.5 text-primary/40" />
+                  </span>
+                </th>
+                <th className="px-2 py-1.5 text-center bg-[#F8FAFC]"><span className="text-[10px] font-semibold text-muted-foreground">%LY</span></th>
                 <th className="px-2 py-1.5 text-right border-l border-border bg-amber-50"><span className="text-[10px] font-semibold text-amber-800">Ano Anterior</span></th>
                 <th className="px-2 py-1.5 text-right bg-amber-50"><span className="text-[10px] font-semibold text-amber-800">Penúltimo</span></th>
                 <th className="px-2 py-1.5 text-right bg-amber-50"><span className="text-[10px] font-semibold text-amber-800">Último</span></th>
@@ -1144,14 +1169,14 @@ export default function ComparisonTable() {
             <tbody>
               {adjustedComparison.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="px-5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={18} className="px-5 py-8 text-center text-sm text-muted-foreground">
                     Nenhuma categoria encontrada para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 <>
                   {paddingTop > 0 && (
-                    <tr><td style={{ height: `${paddingTop}px` }} colSpan={16} /></tr>
+                    <tr><td style={{ height: `${paddingTop}px` }} colSpan={18} /></tr>
                   )}
                   {virtualItems.map((virtualRow) => {
                     const row = adjustedComparison[virtualRow.index];
@@ -1170,7 +1195,7 @@ export default function ComparisonTable() {
                     );
                   })}
                   {paddingBottom > 0 && (
-                    <tr><td style={{ height: `${paddingBottom}px` }} colSpan={16} /></tr>
+                    <tr><td style={{ height: `${paddingBottom}px` }} colSpan={18} /></tr>
                   )}
                 </>
               )}
