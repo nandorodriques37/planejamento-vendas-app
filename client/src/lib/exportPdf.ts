@@ -248,7 +248,7 @@ export async function exportToPdf(params: ExportPdfParams) {
   y += 5;
 
   const tableHead = [
-    ["Categoria", "Mês Atual", "Var LY", "Var LM", "Próx Mês", "Var LY", "Mês +2", "Var LY", "Tri Ant.", "Últ Tri", "Tri Atual", "Var Tri LY", "Var Tri Últ"],
+    ["Categoria", "Mês Atual", "Var LY", "Var LM", "Próx Mês", "Var LY", "Mês +2", "Var LY", "Mês +3", "Var LY", "Tri Ant.", "Últ Tri", "Tri Atual", "Var Tri LY", "Var Tri Últ"],
   ];
   const tableBody = params.comparisonData.map(r => [
     r.categoria,
@@ -259,6 +259,8 @@ export async function exportToPdf(params: ExportPdfParams) {
     fmtPct(r.varLY1),
     fmtNum(r.mes2),
     fmtPct(r.varLY2),
+    fmtNum(r.mes3),
+    fmtPct(r.varLY3),
     fmtNum(r.triAnterior),
     fmtNum(r.ultTrimestre),
     fmtNum(r.triAtual),

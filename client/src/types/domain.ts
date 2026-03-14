@@ -26,6 +26,8 @@ export interface ComparisonRow {
   varLY1: number | null;
   mes2: number | null;
   varLY2: number | null;
+  mes3: number | null;
+  varLY3: number | null;
   triAnterior: number | null;
   penTrimestre: number | null;
   ultTrimestre: number | null;

@@ -175,11 +175,12 @@ function pctVar(current: number, reference: number): number | null {
 
 export const comparisonData: ComparisonRow[] = (() => {
   const fm = DATA_BOUNDARIES.forecastMonths;
-  if (fm.length < 3) return [];
+  if (fm.length < 4) return [];
 
   const m0 = fm[0]; // First forecast month (e.g., "Fev/26")
   const m1 = fm[1]; // Second (e.g., "Mar/26")
   const m2 = fm[2]; // Third (e.g., "Abr/26")
+  const m3 = fm[3]; // Fourth (e.g., "Mai/26")
 
   // Last historical month (e.g., "Jan/26") — for month-over-month
   const lastHist = DATA_BOUNDARIES.lastHistoricalMonth;
@@ -189,9 +190,11 @@ export const comparisonData: ComparisonRow[] = (() => {
   const m0LY = shiftDisplayMonth(m0, -12);
   const m1LY = shiftDisplayMonth(m1, -12);
   const m2LY = shiftDisplayMonth(m2, -12);
+  const m3LY = shiftDisplayMonth(m3, -12);
   const m0LYNum = displayToNumeric(m0LY);
   const m1LYNum = displayToNumeric(m1LY);
   const m2LYNum = displayToNumeric(m2LY);
+  const m3LYNum = displayToNumeric(m3LY);
 
   // Trimester months:
   // triAnterior = same 3 months last year
@@ -217,11 +220,13 @@ export const comparisonData: ComparisonRow[] = (() => {
     const mes0Val = Math.round(sumForecastCat(cat, m0));
     const mes1Val = Math.round(sumForecastCat(cat, m1));
     const mes2Val = Math.round(sumForecastCat(cat, m2));
+    const mes3Val = Math.round(sumForecastCat(cat, m3));
 
     // LY values from historico
     const m0LYVal = sumHistoricoCat(cat, m0LYNum);
     const m1LYVal = sumHistoricoCat(cat, m1LYNum);
     const m2LYVal = sumHistoricoCat(cat, m2LYNum);
+    const m3LYVal = sumHistoricoCat(cat, m3LYNum);
 
     // LM value (last historical month)
     const lmVal = sumHistoricoCat(cat, lastHistNum);
@@ -241,6 +246,8 @@ export const comparisonData: ComparisonRow[] = (() => {
       varLY1: pctVar(mes1Val, m1LYVal),
       mes2: mes2Val,
       varLY2: pctVar(mes2Val, m2LYVal),
+      mes3: mes3Val,
+      varLY3: pctVar(mes3Val, m3LYVal),
       triAnterior: triAnterior > 0 ? Math.round(triAnterior) : null,
       penTrimestre: penTrimestre > 0 ? Math.round(penTrimestre) : null,
       ultTrimestre: ultTrimestre > 0 ? Math.round(ultTrimestre) : null,
