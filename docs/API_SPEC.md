@@ -150,9 +150,9 @@ Retorna dados comparativos por Categoria Nível 4.
       "triAnterior": 520000,
       "ultTrimestre": 545000,
       "triAtual": 595183,
-      "triPenultimo": 530000,
+      "penTrimestre": 530000,
       "varTriLY": 14.4,
-      "varTriPenult": 12.3,
+      "varTriPenTri": 12.3,
       "varTriUltTri": 9.2,
       "confidence": {
         "level": "alta",
