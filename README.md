@@ -56,40 +56,55 @@ Este sistema fornece uma interface web colaborativa onde:
 ### Versão Atual (Protótipo Frontend)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      NAVEGADOR                           │
-│                                                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐  │
-│  │ React 19 │  │ Tailwind │  │ shadcn/ui + Radix    │  │
-│  │ + Wouter │  │ CSS 4    │  │ Components           │  │
-│  └────┬─────┘  └──────────┘  └──────────────────────┘  │
-│       │                                                  │
-│  ┌────┴──────────────────────────────────────────────┐  │
-│  │           Contexts (Estado Global)                 │  │
-│  │  ┌────────────┐ ┌──────────┐ ┌────────────┐      │  │
-│  │  │FilterCtx   │ │ForecastCtx│ │PeriodCtx   │      │  │
-│  │  │(filtros    │ │(ajustes,  │ │(período    │      │  │
-│  │  │ multi-sel.)│ │ auditoria)│ │ seleção)   │      │  │
-│  │  └────────────┘ └──────────┘ └────────────┘      │  │
-│  │  ┌────────────┐                                    │  │
-│  │  │ThemeCtx    │                                    │  │
-│  │  │(tema claro/│                                    │  │
-│  │  │ escuro)    │                                    │  │
-│  │  └────────────┘                                    │  │
-│  └───────────────────┬───────────────────────────────┘  │
-│                      │                                   │
-│  ┌───────────────────┴───────────────────────────────┐  │
-│  │              LocalStorage                          │  │
-│  │  (ajustes, log de auditoria, preferências)         │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │           mockData.ts (Dados Estáticos)            │  │
-│  │  881 produtos · 57 fornecedores · 28 categorias   │  │
-│  │  9 CDs · Histórico Jan/23-Jan/26 + Forecast       │  │
-│  │  Dados mensais por Cat.N4 × CD (histórico+prev.)  │  │
-│  └────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                         NAVEGADOR                            │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐       │
+│  │ React 19 │  │ Tailwind │  │ shadcn/ui + Radix    │       │
+│  │ + Wouter │  │ CSS 4    │  │ Components           │       │
+│  └────┬─────┘  └──────────┘  └──────────────────────┘       │
+│       │                                                      │
+│  ┌────┴───────────────────────────────────────────────────┐  │
+│  │         Zustand Stores (Estado Global)                  │  │
+│  │  ┌──────────────┐ ┌────────────────┐ ┌──────────────┐  │  │
+│  │  │ filterStore   │ │ forecastStore   │ │ authStore    │  │  │
+│  │  │ (filtros      │ │ (ajustes,       │ │ (autenticação│  │  │
+│  │  │  multi-sel.)  │ │  auditoria)     │ │  e perfis)   │  │  │
+│  │  └──────┬────────┘ └───────┬─────────┘ └──────────────┘  │  │
+│  │         │                  │                              │  │
+│  │  ┌──────┴────────┐ ┌──────┴──────────┐                   │  │
+│  │  │ filterWorker  │ │ forecastWorker   │  ← Web Workers   │  │
+│  │  │ (cálculos em  │ │ (propagação de   │    (thread sep.) │  │
+│  │  │  background)  │ │  ajustes)        │                   │  │
+│  │  └──────┬────────┘ └───────┬─────────┘                   │  │
+│  │         │                  │                              │  │
+│  │  ┌──────┴────────┐ ┌──────┴──────────┐                   │  │
+│  │  │ filterEngine  │ │ forecastEngine   │  ← Engines       │  │
+│  │  │ (lógica de    │ │ (lógica de       │    (cálculos)    │  │
+│  │  │  agregação)   │ │  previsão)       │                   │  │
+│  │  └───────────────┘ └─────────────────┘                   │  │
+│  └────────────────────────┬──────────────────────────────┘  │
+│                           │                                  │
+│  ┌────────────────────────┴──────────────────────────────┐  │
+│  │           dataProvider.ts (Camada de Abstração)        │  │
+│  │  Re-exporta dados de mockData, dataDerived,            │  │
+│  │  dataBoundaries. Futuramente: chamadas à API REST.     │  │
+│  └──────────┬────────────────────────┬───────────────────┘  │
+│             │                        │                       │
+│  ┌──────────┴──────────┐  ┌─────────┴─────────────────┐    │
+│  │ mockData.ts (Dados) │  │ dataBoundaries.ts          │    │
+│  │ 881 produtos         │  │ (fronteiras auto-detect.)  │    │
+│  │ 57 fornecedores      │  ├────────────────────────────┤    │
+│  │ 28 categorias N4     │  │ dataDerived.ts             │    │
+│  │ 18 categorias N3     │  │ (monthlyData, comparison   │    │
+│  │ 9 CDs                │  │  calculados dinamicamente) │    │
+│  └──────────────────────┘  └────────────────────────────┘    │
+│                                                              │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │              LocalStorage                              │   │
+│  │  (ajustes, log de auditoria, preferências)             │   │
+│  └───────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### Versão Produção (Recomendada)
@@ -135,7 +150,7 @@ Este sistema fornece uma interface web colaborativa onde:
 ## Estrutura de Diretórios
 
 ```
-previsao-vendas-mockup/
+planejamento-vendas-app/
 ├── client/
 │   ├── index.html                        # HTML entry point (Google Fonts CDN)
 │   ├── public/                           # Assets estáticos
@@ -160,29 +175,59 @@ previsao-vendas-mockup/
 │       │   ├── Filters.tsx               # Painel de filtros com multi-seleção
 │       │   ├── MultiSelectCombobox.tsx   # Componente reutilizável de multi-seleção
 │       │   ├── AdjustmentTable.tsx       # Tabela de ajustes colaborativos por SKU
+│       │   ├── SupplierAdjustment.tsx    # Ajustes por fornecedor
 │       │   ├── AuditLog.tsx              # Log de auditoria expandível com exportação
 │       │   ├── ExportButtons.tsx         # Botões de exportação Excel/PDF
+│       │   ├── ProtectedRoute.tsx        # Rota protegida por autenticação
 │       │   ├── ErrorBoundary.tsx         # Tratamento de erros React
 │       │   ├── ManusDialog.tsx           # Dialog customizado
 │       │   └── Map.tsx                   # Componente de mapa (Google Maps)
-│       ├── contexts/
-│       │   ├── FilterContext.tsx          # Estado de filtros multi-seleção e agregação
-│       │   ├── ForecastContext.tsx        # Estado de ajustes, auditoria e propagação
+│       ├── store/                        # Gerenciamento de estado (Zustand)
+│       │   ├── filterStore.ts            # Store de filtros multi-seleção e agregação
+│       │   ├── filterEngine.ts           # Lógica de cálculo de filtros e agregação
+│       │   ├── filterWorker.ts           # Web Worker para cálculos de filtro em background
+│       │   ├── forecastStore.ts          # Store de ajustes, auditoria e propagação
+│       │   ├── forecastEngine.ts         # Lógica de cálculo de previsões e ajustes
+│       │   ├── forecastWorker.ts         # Web Worker para cálculos de forecast em background
+│       │   └── authStore.ts              # Store de autenticação e perfis de usuário
+│       ├── contexts/                     # Wrappers de compatibilidade (delegam para stores)
+│       │   ├── FilterContext.tsx          # Re-exporta useFilterStore
+│       │   ├── ForecastContext.tsx        # Re-exporta useForecastStore
 │       │   ├── PeriodContext.tsx          # Estado do período selecionado
 │       │   └── ThemeContext.tsx           # Tema claro/escuro
+│       ├── services/                     # Camada de serviços e abstração de dados
+│       │   ├── dataProvider.ts           # Abstração centralizada de acesso a dados
+│       │   ├── api.ts                    # Cliente HTTP para API REST (futuro)
+│       │   ├── config.ts                 # Configurações da aplicação
+│       │   ├── adjustmentService.ts      # Persistência de ajustes (LocalStorage → API)
+│       │   ├── forecastService.ts        # Serviço de previsões
+│       │   ├── filterService.ts          # Serviço de filtros
+│       │   └── authService.ts            # Serviço de autenticação
+│       ├── types/                        # Tipos TypeScript compartilhados
+│       │   ├── domain.ts                 # Interfaces de domínio (Product, ComparisonRow, etc.)
+│       │   └── api.ts                    # Tipos de request/response da API
 │       ├── hooks/                        # Custom hooks
 │       └── lib/
 │           ├── mockData.ts               # Dados reais extraídos do Excel (881 produtos)
 │           │                             #   + catN4CdMonthlyHistorico (Jan/23-Jan/26)
 │           │                             #   + catN4CdMonthlyForecast (Fev/26-Jan/28)
-│           │                             #   + comparisonData (19 categorias N4)
+│           │                             #   + catN4CdMonthlyQtdBruta (Jan/23-Jan/26)
+│           │                             #   + cdMonthlyData (forecast por CD)
+│           ├── dataBoundaries.ts         # Detecção automática de fronteiras histórico/forecast
+│           ├── dataDerived.ts            # Derivação dinâmica de monthlyData e comparisonData
+│           ├── constants.ts              # Constantes globais (meses PT, etc.)
+│           ├── dateUtils.ts              # Utilitários de manipulação de datas
+│           ├── forecastUtils.ts          # Utilitários de cálculo de previsões
 │           ├── exportExcel.ts            # Lógica de exportação Excel (4 abas)
 │           ├── exportPdf.ts              # Lógica de exportação PDF (KPIs + gráfico + tabela)
+│           ├── exportUtils.ts            # Utilitários compartilhados de exportação
 │           └── utils.ts                  # Utilitários gerais (cn, formatação)
 ├── docs/
 │   ├── API_SPEC.md                       # Especificação da API REST para produção
 │   ├── DEPLOYMENT.md                     # Guia de deploy e migração para produção
-│   └── CHANGELOG.md                      # Histórico de alterações (este arquivo)
+│   ├── CHANGELOG.md                      # Histórico de alterações
+│   ├── FUNCIONALIDADES.md                # Detalhamento de funcionalidades (como funciona cada uma)
+│   └── FONTES_DE_DADOS.md               # Checklist de campos e fontes de dados para integração
 ├── server/                               # Placeholder (não usado no protótipo)
 ├── shared/                               # Placeholder (não usado no protótipo)
 ├── package.json
@@ -222,12 +267,14 @@ interface ComparisonRow {
   varLY1: number | null;        // Variação LY próximo mês (%)
   mes2: number | null;          // Previsão mês +2 (Abr/26)
   varLY2: number | null;        // Variação LY mês +2 (%)
+  mes3: number | null;          // Previsão mês +3 (Mai/26)
+  varLY3: number | null;        // Variação LY mês +3 (%)
   triAnterior: number | null;   // Trimestre ano anterior (Fev-Abr/25)
-  triPenultimo: number | null;  // Penúltimo trimestre (Ago-Out/25)
+  penTrimestre: number | null;  // Penúltimo trimestre (Ago-Out/25)
   ultTrimestre: number | null;  // Último trimestre (Nov-Jan/25-26)
   triAtual: number | null;      // Trimestre atual (Fev-Abr/26)
   varTriLY: number | null;      // Variação trimestral vs. ano anterior (%)
-  varTriPenult: number | null;  // Variação vs. penúltimo trimestre (%)
+  varTriPenTri: number | null;  // Variação vs. penúltimo trimestre (%)
   varTriUltTri: number | null;  // Variação vs. último trimestre (%)
 }
 ```
@@ -264,7 +311,45 @@ catN4CdMonthlyHistorico: {
     }
   }
 }
+
+// Quantidade Bruta por Categoria × CD × Mês (mesma estrutura do histórico)
+catN4CdMonthlyQtdBruta: {
+  [categoria: string]: {
+    [cd: number]: {           // 1, 2, 3, ...
+      [month: string]: number // "2025_06": 12345
+    }
+  }
+}
+
+// Forecast por Centro de Distribuição × Mês
+cdMonthlyData: {
+  [cd: string]: {             // "CD 1", "CD 2", ...
+    historico: Record<string, number>;  // Meses históricos (vazio no protótipo)
+    forecast: Record<string, number>;   // "Fev/26": 68367.45
+  }
+}
 ```
+
+### Detecção Automática de Fronteiras (DATA_BOUNDARIES)
+
+O arquivo `dataBoundaries.ts` escaneia os dados brutos para determinar automaticamente onde termina o histórico e começa a previsão. Quando a base é atualizada com um novo mês de histórico, toda a aplicação se ajusta automaticamente.
+
+```typescript
+DATA_BOUNDARIES: {
+  firstHistoricalNumeric: string;    // "2023_01"
+  lastHistoricalNumeric: string;     // "2026_01"
+  lastHistoricalMonth: string;       // "Jan/26"
+  firstForecastMonth: string;        // "Fev/26"
+  historicalMonths: string[];        // ["Jan/23", ..., "Jan/26"]
+  forecastMonths: string[];          // ["Fev/26", ..., "Dez/26"]
+  allMonths: string[];               // Todos os meses combinados
+  allForecastMonthsInData: string[]; // Inclui meses até Jan/28
+}
+```
+
+### Derivação Dinâmica de Dados (dataDerived.ts)
+
+Os arrays `monthlyData` e `comparisonData` são calculados dinamicamente a partir das estruturas brutas (`catN4CdMonthlyHistorico`, `catN4CdMonthlyQtdBruta`, `catN4CdMonthlyForecast`), eliminando a necessidade de arrays pré-calculados estáticos.
 
 ### ConfidenceLevel (Indicador de Confiança)
 
@@ -300,7 +385,7 @@ Todos os 6 filtros suportam **seleção múltipla simultânea**:
 | Filtro | Tipo | Valores | Funcionalidade |
 |--------|------|---------|----------------|
 | Código Produto | Texto livre | Busca por código numérico | Filtra tabela de produtos |
-| Categoria Nível 3 | Multi-seleção | 15 categorias | Filtra todas as seções |
+| Categoria Nível 3 | Multi-seleção | 18 categorias | Filtra todas as seções |
 | Categoria Nível 4 | Multi-seleção | 28 categorias | Filtra todas as seções |
 | Centro de Distribuição | Multi-seleção | 9 CDs | Filtra todas as seções |
 | Comprador | Multi-seleção | 12 compradores | Filtra todas as seções |
@@ -445,19 +530,25 @@ Excel (ETAPA_3_PREVISAO_SKU.xlsx)
         ▼
   mockData.ts (dados estáticos no frontend)
         │
-        ├──▶ FilterContext (filtra e agrega — multi-seleção)
-        │         │
-        │         ├──▶ KpiCards (indicadores)
-        │         ├──▶ SalesChart (gráfico 4 séries)
-        │         ├──▶ ComparisonTable (categorias + sparklines + confiança)
-        │         └──▶ ProductTable (881 produtos)
+        ├──▶ dataBoundaries.ts (detecta fronteiras histórico/forecast)
         │
-        └──▶ ForecastContext (ajustes + propagação)
+        ├──▶ dataDerived.ts (calcula monthlyData + comparisonData)
+        │
+        └──▶ dataProvider.ts (camada de abstração centralizada)
                   │
-                  ├──▶ AdjustmentTable (tabela de ajustes por %)
-                  ├──▶ ComparisonTable (edição inline → modal → salvar)
-                  ├──▶ AuditLog (log de auditoria)
-                  └──▶ LocalStorage (persistência)
+                  ├──▶ filterStore + filterWorker (filtra e agrega — multi-seleção)
+                  │         │
+                  │         ├──▶ KpiCards (indicadores)
+                  │         ├──▶ SalesChart (gráfico 4 séries)
+                  │         ├──▶ ComparisonTable (categorias + sparklines + confiança)
+                  │         └──▶ ProductTable (881 produtos)
+                  │
+                  └──▶ forecastStore + forecastWorker (ajustes + propagação)
+                            │
+                            ├──▶ AdjustmentTable (tabela de ajustes por %)
+                            ├──▶ ComparisonTable (edição inline → modal → salvar)
+                            ├──▶ AuditLog (log de auditoria)
+                            └──▶ adjustmentService → LocalStorage (persistência)
 ```
 
 ---
@@ -724,9 +815,15 @@ Para dúvidas técnicas sobre a implementação, consulte o código-fonte docume
 
 **Arquivos-chave para entender o sistema:**
 
-1. `client/src/contexts/FilterContext.tsx` — Lógica de filtros multi-seleção e agregação
-2. `client/src/contexts/ForecastContext.tsx` — Lógica de ajustes, propagação e auditoria
-3. `client/src/lib/mockData.ts` — Estrutura de dados e dados reais do Excel
-4. `client/src/components/ComparisonTable.tsx` — Tabela comparativa com edição inline, confiança e sparklines
-5. `client/src/components/MultiSelectCombobox.tsx` — Componente reutilizável de multi-seleção
-6. `client/src/pages/Home.tsx` — Layout principal do dashboard
+1. `client/src/store/filterStore.ts` — Store Zustand de filtros multi-seleção e agregação
+2. `client/src/store/forecastStore.ts` — Store Zustand de ajustes, propagação e auditoria
+3. `client/src/store/filterEngine.ts` — Lógica de cálculo de filtros e dados derivados
+4. `client/src/store/forecastEngine.ts` — Lógica de cálculo de previsões e ajustes
+5. `client/src/services/dataProvider.ts` — Camada de abstração de acesso a dados
+6. `client/src/lib/mockData.ts` — Estrutura de dados e dados reais do Excel
+7. `client/src/lib/dataBoundaries.ts` — Detecção automática de fronteiras histórico/forecast
+8. `client/src/lib/dataDerived.ts` — Derivação dinâmica de monthlyData e comparisonData
+9. `client/src/components/ComparisonTable.tsx` — Tabela comparativa com edição inline, confiança e sparklines
+10. `client/src/components/MultiSelectCombobox.tsx` — Componente reutilizável de multi-seleção
+11. `client/src/pages/Home.tsx` — Layout principal do dashboard
+12. `client/src/types/domain.ts` — Interfaces de domínio (Product, ComparisonRow, etc.)

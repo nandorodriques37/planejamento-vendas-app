@@ -4,6 +4,56 @@ Todas as alterações notáveis deste projeto são documentadas neste arquivo. O
 
 ---
 
+## [v2.0] — 2026-03-15
+
+### Refatorado — Arquitetura de Estado
+- **Zustand stores** substituem React Contexts como gerenciadores de estado principal.
+  - `filterStore.ts` — gerencia filtros multi-seleção e dados derivados (filteredProducts, filteredComparison, filteredMonthlyData).
+  - `forecastStore.ts` — gerencia ajustes colaborativos, propagação e auditoria.
+  - `authStore.ts` — gerencia autenticação e perfis de usuário.
+- **Web Workers** para cálculos pesados em threads separadas:
+  - `filterWorker.ts` — processa agregação de filtros em background.
+  - `forecastWorker.ts` — processa propagação de ajustes em background.
+- **Engines de cálculo** separadas dos stores para testabilidade:
+  - `filterEngine.ts` — lógica pura de filtragem e agregação.
+  - `forecastEngine.ts` — lógica pura de previsões, ajustes e propagação proporcional.
+- `FilterContext.tsx` e `ForecastContext.tsx` agora são wrappers finos que re-exportam os stores Zustand.
+
+### Adicionado — Camada de Serviços
+- `services/dataProvider.ts` — abstração centralizada de acesso a dados (re-exporta mockData, dataDerived, dataBoundaries). Preparado para migração para API REST.
+- `services/api.ts` — cliente HTTP configurável para API REST futura.
+- `services/config.ts` — configurações da aplicação.
+- `services/adjustmentService.ts` — persistência de ajustes (LocalStorage, migração futura para API).
+- `services/forecastService.ts` — serviço de previsões.
+- `services/filterService.ts` — serviço de filtros.
+- `services/authService.ts` — serviço de autenticação.
+
+### Adicionado — Derivação Dinâmica de Dados
+- `lib/dataBoundaries.ts` — detecta automaticamente fronteiras entre histórico e forecast a partir dos dados brutos. Quando um novo mês de histórico é adicionado, toda a aplicação se ajusta.
+- `lib/dataDerived.ts` — calcula `monthlyData` e `comparisonData` dinamicamente a partir de `catN4CdMonthlyHistorico`, `catN4CdMonthlyQtdBruta` e `catN4CdMonthlyForecast`.
+- `lib/constants.ts` — constantes globais (meses em PT, ordenação).
+- `lib/dateUtils.ts` — utilitários de manipulação de datas.
+- `lib/forecastUtils.ts` — utilitários de cálculo de previsões.
+- `lib/exportUtils.ts` — utilitários compartilhados de exportação.
+
+### Adicionado — Tipos e Componentes
+- `types/domain.ts` — interfaces de domínio centralizadas (Product, ComparisonRow, SavedAdjustment, AdjustmentLevel, AdjustmentType).
+- `types/api.ts` — tipos de request/response da API.
+- `components/ProtectedRoute.tsx` — componente de rota protegida por autenticação.
+- `components/SupplierAdjustment.tsx` — ajustes por fornecedor.
+
+### Adicionado — Documentação
+- `docs/FUNCIONALIDADES.md` — detalhamento de todas as funcionalidades em formato de tabela (funcionalidade × como funciona).
+- `docs/FONTES_DE_DADOS.md` — checklist de campos e fontes de dados para integração com datalake.
+
+### Alterado
+- `ComparisonRow` agora inclui campos `mes3`, `varLY3` e usa nomes `penTrimestre` e `varTriPenTri`.
+- categoriesNivel3 contém 18 categorias (não 15 como documentado anteriormente).
+- Estrutura de dados `catN4CdMonthlyQtdBruta` documentada (quantidade bruta por Cat N4 × CD × Mês).
+- Estrutura de dados `cdMonthlyData` documentada (forecast por CD × Mês).
+
+---
+
 ## [v1.6] — 2026-02-09
 
 ### Adicionado
